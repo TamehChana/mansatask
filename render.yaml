@@ -9,13 +9,12 @@ services:
     env: node
     region: oregon  # Change to your preferred region
     plan: free  # Change to 'starter' for production
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm run start:prod
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npx prisma migrate deploy && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      # PORT is automatically set by Render - don't override it
       - key: DATABASE_URL
         fromDatabase:
           name: payment-link-db
