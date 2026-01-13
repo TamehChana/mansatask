@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+:root {
+  /* Fintech Color System */
+  --primary-navy: #0A2540;
+  --accent-teal: #17A2B8;
+  --success-green: #2ECC71;
+  --warning-amber: #F5A623;
+  --error-red: #E5533D;
+  --background-off-white: #F8FAFC;
+  --surface-white: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  
+  /* Spacing System (8px base) */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+}
+
+@theme inline {
+  --color-primary: var(--primary-navy);
+  --color-accent: var(--accent-teal);
+  --color-success: var(--success-green);
+  --color-warning: var(--warning-amber);
+  --color-error: var(--error-red);
+  --color-background: var(--background-off-white);
+  --color-surface: var(--surface-white);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background-off-white);
+  color: var(--text-primary);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Scale */
+h1 {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+/* Button Base Styles */
+button, .btn {
+  transition: all 150ms ease;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* Input Focus States */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  ring-width: 2px;
+  ring-color: var(--accent-teal);
+  border-color: var(--accent-teal);
+}
+
+/* Card Styles */
+.card {
+  background: var(--surface-white);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Subtle hover effects */
+.hover-lift {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Mobile Responsive Improvements */
+@media (max-width: 640px) {
+  /* Better touch targets on mobile */
+  button, a, input, select, textarea {
+    min-height: 44px; /* iOS recommended touch target size */
+  }
+
+  /* Improved form spacing on mobile */
+  form {
+    padding: 0;
+  }
+
+  /* Better text sizing on mobile */
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better table/card spacing */
+  .table-container {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+}
+
+/* Ensure inputs are readable on mobile */
+input, textarea, select {
+  font-size: 16px; /* Prevents zoom on iOS */
+}
+
+@media (max-width: 640px) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+}

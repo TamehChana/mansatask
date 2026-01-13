@@ -1,0 +1,851 @@
+# Payment Link Platform - Production-Grade Fintech Development Rules
+
+## Description
+Comprehensive development rules for building a production-grade Payment Link Platform. These rules enforce security, scalability, clean architecture, and best practices for fintech applications handling financial transactions. Applies to all backend (NestJS) and frontend (React/Next.js) code.
+
+## File Patterns
+**Backend (NestJS):**
+- `**/*.ts` (All TypeScript files)
+- `**/*.js` (JavaScript files if any)
+- `**/*.module.ts` (Module definitions)
+- `**/*.controller.ts` (API controllers)
+- `**/*.service.ts` (Business logic services)
+- `**/*.repository.ts` (Data access layer)
+- `**/*.dto.ts` (Data Transfer Objects)
+- `**/*.entity.ts` (Database entities)
+- `**/*.guard.ts` (Authentication/Authorization guards)
+- `**/*.decorator.ts` (Custom decorators)
+- `**/*.interceptor.ts` (Interceptors)
+- `**/*.filter.ts` (Exception filters)
+- `**/*.middleware.ts` (Middleware)
+- `**/*.strategy.ts` (Passport strategies, etc.)
+- `**/*.config.ts` (Configuration files)
+- `**/*.spec.ts` (Test files)
+- `**/*.e2e-spec.ts` (E2E test files)
+- `**/migrations/**/*` (Database migrations)
+- `**/seeds/**/*` (Database seeds)
+
+**Frontend (React/Next.js):**
+- `**/*.tsx` (React components)
+- `**/*.ts` (TypeScript files)
+- `**/*.jsx` (JSX files)
+- `**/*.js` (JavaScript files)
+- `**/pages/**/*` (Next.js pages)
+- `**/app/**/*` (Next.js app directory)
+- `**/components/**/*` (React components)
+- `**/hooks/**/*` (Custom React hooks)
+- `**/services/**/*` (API services)
+- `**/utils/**/*` (Utility functions)
+- `**/types/**/*` (TypeScript types/interfaces)
+- `**/lib/**/*` (Third-party configurations)
+- `**/styles/**/*` (CSS/SCSS files)
+- `**/*.module.css` (CSS modules)
+- `**/*.test.tsx` (Component tests)
+- `**/*.test.ts` (Unit tests)
+- `**/*.spec.tsx` (Spec files)
+
+**Configuration & Infrastructure:**
+- `*.json` (Package.json, tsconfig.json, etc.)
+- `*.env*` (Environment files)
+- `*.config.*` (Configuration files)
+- `package.json`
+- `package-lock.json` / `yarn.lock`
+- `tsconfig.json`
+- `tsconfig.*.json`
+- `next.config.*`
+- `nest-cli.json`
+- `ormconfig.*` (TypeORM config)
+- `docker-compose.*` (Docker configurations)
+- `Dockerfile*` (Docker files)
+- `.dockerignore`
+- `.gitignore`
+- `.eslintrc.*`
+- `.prettierrc.*`
+
+**Database:**
+- `**/migrations/**/*.ts` (TypeORM migrations)
+- `**/seeds/**/*.ts` (Database seeds)
+- `**/*.entity.ts` (Entity definitions)
+- `**/*schema*.sql` (SQL schemas if any)
+
+**Testing:**
+- `**/*.spec.ts` (Unit tests)
+- `**/*.test.ts` (Test files)
+- `**/*.test.tsx` (Component tests)
+- `**/*.e2e-spec.ts` (E2E tests)
+- `**/__tests__/**/*` (Test directories)
+- `**/__mocks__/**/*` (Mock files)
+- `jest.config.*`
+- `.test.env*`
+
+**Documentation:**
+- `*.md` (Markdown files)
+- `README.md`
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `docs/**/*` (Documentation directory)
+- `**/*.md` (Any markdown files)
+
+**Scripts & Build:**
+- `scripts/**/*` (Build/deployment scripts)
+- `**/*.sh` (Shell scripts)
+- `**/*.bat` (Batch scripts)
+
+---
+
+# 🏗️ ARCHITECTURE RULES
+
+## Always design systems using modular architecture
+
+### Backend Architecture (NestJS)
+- **Feature-based module structure**: Organize code by features, not by technical layers
+  ```
+  src/
+    auth/
+      auth.module.ts
+      auth.controller.ts
+      auth.service.ts
+      auth.repository.ts
+      dto/
+        login.dto.ts
+        register.dto.ts
+    products/
+      products.module.ts
+      products.controller.ts
+      products.service.ts
+      products.repository.ts
+      dto/
+    payments/
+      payments.module.ts
+      payments.controller.ts
+      payments.service.ts
+      payments.repository.ts
+      dto/
+  ```
+
+- **Clear separation of concerns**:
+  - Controllers → Handle HTTP requests/responses only
+  - Services → Business logic
+  - Repositories → Data access layer
+  - DTOs → Data validation and transformation
+
+- **No business logic in controllers**: Controllers should only:
+  - Validate input (via DTOs and validation pipes)
+  - Call service methods
+  - Return responses
+  - Handle HTTP-specific concerns
+
+- **DTOs for all input/output**: Every endpoint must have:
+  - Request DTO (for input validation)
+  - Response DTO (for output structure)
+  - Use `class-validator` decorators for validation
+
+- **Explicit interfaces and types**: Avoid `any`, use proper TypeScript types
+
+### Frontend Architecture (React/Next.js)
+- **Component-driven architecture**:
+  - Reusable, composable components
+  - Single Responsibility Principle
+  - Small, focused components over large monolithic ones
+
+- **Separation between UI, state, and API logic**:
+  ```
+  components/
+    ProductCard/
+      ProductCard.tsx        # UI component
+      ProductCard.module.css # Styles
+  hooks/
+    useProducts.ts           # State management & API calls
+  services/
+    api/
+      products.ts            # API client functions
+  ```
+
+- **Clean folder structure**:
+  ```
+  src/
+    app/                     # Next.js app directory
+    components/              # Reusable UI components
+    hooks/                   # Custom React hooks
+    services/                # API services, utilities
+    types/                   # TypeScript types/interfaces
+    utils/                   # Helper functions
+    lib/                     # Third-party configs
+  ```
+
+- **Prefer clarity over cleverness**: Simple, readable solutions beat complex abstractions
+
+---
+
+# 🔐 SECURITY FIRST (NON-NEGOTIABLE)
+
+## Always assume the system is under attack
+
+### Backend Security
+
+#### Input Validation
+- **Validate all inputs using DTOs + validation pipes**:
+  ```typescript
+  @Post('create')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  async create(@Body() createDto: CreateProductDto) {
+    // DTO automatically validates input
+  }
+  ```
+
+- **Never trust client input**: Validate everything, even if it seems safe
+
+#### Authentication & Authorization
+- **Hash passwords with bcrypt** (never store plain text):
+  ```typescript
+  import * as bcrypt from 'bcrypt';
+  const hashedPassword = await bcrypt.hash(password, 10);
+  ```
+
+- **Use JWT authentication with**:
+  - Short-lived access tokens (15-30 minutes)
+  - HTTP-only cookies where applicable (for refresh tokens)
+  - Proper token expiration and refresh mechanism
+
+- **Protect routes with Guards**:
+  ```typescript
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Request() req) {
+    // Only authenticated users can access
+  }
+  ```
+
+#### Prevent Common Vulnerabilities
+- **IDOR (Insecure Direct Object Reference)**: Always verify user ownership
+  ```typescript
+  // BAD: No ownership check
+  async getProduct(id: string) {
+    return this.productRepository.findOne(id);
+  }
+
+  // GOOD: Verify ownership
+  async getProduct(id: string, userId: string) {
+    const product = await this.productRepository.findOne({ id, userId });
+    if (!product) throw new ForbiddenException();
+    return product;
+  }
+  ```
+
+- **Duplicate payments (idempotency keys)**: Use idempotency keys for payment endpoints
+  ```typescript
+  @Post('initiate-payment')
+  async initiatePayment(
+    @Body() dto: InitiatePaymentDto,
+    @Headers('idempotency-key') idempotencyKey: string,
+  ) {
+    // Check Redis for existing idempotency key
+    // Prevent duplicate payment processing
+  }
+  ```
+
+- **Never expose**:
+  - Secrets, tokens, or API keys in responses
+  - Internal errors (stack traces) to clients
+  - Database structure or internal IDs
+
+### Frontend Security
+
+- **Never trust client input**: Validate on frontend AND backend
+- **Do not store sensitive tokens in localStorage**: Use httpOnly cookies or memory-based storage
+- **Handle auth securely**: 
+  - Use httpOnly cookies for tokens when possible
+  - Clear tokens on logout
+  - Implement token refresh mechanism
+- **Sanitize user-generated content**: Prevent XSS attacks
+- **Use HTTPS**: Always in production
+- **Implement CSRF protection**: For state-changing operations
+
+---
+
+# ⚡ PERFORMANCE RULES
+
+### Backend Performance
+
+- **Optimize database queries**:
+  - Use proper indexes on frequently queried fields
+  - Avoid N+1 queries (use eager loading or joins)
+  - Use pagination for list endpoints
+  - Select only needed fields
+
+- **Use Redis for**:
+  - Caching frequently accessed data
+  - Idempotency keys storage
+  - Temporary transaction states
+  - Rate limiting
+
+- **Database best practices**:
+  ```typescript
+  // BAD: N+1 query problem
+  const products = await this.productRepository.find();
+  for (const product of products) {
+    const user = await this.userRepository.findOne(product.userId);
+  }
+
+  // GOOD: Use relations
+  const products = await this.productRepository.find({
+    relations: ['user'],
+  });
+  ```
+
+### Frontend Performance
+
+- **Avoid unnecessary re-renders**:
+  - Use `React.memo()` for expensive components
+  - Use `useMemo()` for expensive calculations
+  - Use `useCallback()` for function props
+
+- **Keep components small and focused**: Large components are harder to optimize
+
+- **Use React Query for**:
+  - Caching API responses
+  - Automatic retry logic
+  - Loading & error states
+  - Background refetching
+
+- **Use Next.js features properly**:
+  - SSR only where needed (SEO, initial data)
+  - CSR for dashboards (faster, better UX)
+  - SSG for public/static pages if applicable
+  - Image optimization with `next/image`
+
+---
+
+# 💳 PAYMENT & TRANSACTION RULES
+
+## Payments must be safe, traceable, and idempotent
+
+### Critical Payment Requirements
+
+- **Always generate a unique externalReference**:
+  ```typescript
+  const externalReference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  ```
+
+- **Use idempotency keys to prevent duplicate payments**:
+  ```typescript
+  // Store idempotency key in Redis with TTL
+  // If key exists, return existing transaction result
+  // Never process same payment twice
+  ```
+
+- **Handle transaction states explicitly**:
+  ```typescript
+  enum TransactionStatus {
+    PENDING = 'PENDING',
+    SUCCESS = 'SUCCESS',
+    FAILED = 'FAILED',
+    CANCELLED = 'CANCELLED',
+  }
+  ```
+
+- **Never assume payment success until confirmed**:
+  - Always verify payment status with payment provider
+  - Implement webhook handlers for payment status updates
+  - Use polling as fallback if webhooks fail
+
+- **Store transaction state explicitly**: Never rely on implicit state
+
+- **Log payment lifecycle clearly**:
+  ```typescript
+  logger.log(`Payment initiated: ${transactionId}`, 'PaymentService');
+  logger.log(`Payment status updated: ${transactionId} -> ${status}`, 'PaymentService');
+  ```
+
+- **Think like a fintech engineer, not a hobbyist**: Every payment is critical, treat it as such
+
+### Payment Flow Best Practices
+
+1. **Initiate Payment**:
+   - Generate unique transaction ID
+   - Store idempotency key
+   - Create transaction record with PENDING status
+   - Call payment provider API
+   - Return transaction reference to client
+
+2. **Check Transaction Status**:
+   - Poll payment provider or use webhooks
+   - Update transaction status in database
+   - Notify user of status change
+
+3. **Handle Webhooks**:
+   - Verify webhook signature
+   - Update transaction status
+   - Trigger notifications
+   - Handle edge cases (duplicate webhooks, etc.)
+
+---
+
+# 🎨 UI & USER EXPERIENCE RULES
+
+## UI must be clean, professional, and intuitive
+
+### Priorities
+1. **Clarity > Beauty**: Users must understand what to do
+2. **Usability > Animations**: Function over form
+3. **Consistency > Creativity**: Consistent patterns build trust
+
+### UI Standards
+
+- **Clear typography**: Readable fonts, proper hierarchy
+- **Proper spacing**: Adequate whitespace, consistent padding/margins
+- **Clear call-to-action buttons**: Primary actions should be obvious
+- **Obvious loading states**: Users should know when something is processing
+- **Friendly error messages**: Helpful, not technical
+
+### UX Rules
+
+- **Always show feedback**:
+  - Loading states during API calls
+  - Success messages after actions
+  - Error messages with recovery options
+
+- **Disable buttons during processing**: Prevent double submissions
+
+- **Never leave user guessing**: Always provide clear next steps
+
+### Design Mindset
+> "This app should feel trustworthy enough to handle money."
+
+- Professional appearance
+- Security indicators (SSL badges, trust signals)
+- Clear transaction information
+- Transparent fee structure (if applicable)
+
+---
+
+# 🧪 ERROR HANDLING & RELIABILITY
+
+### Backend Error Handling
+
+- **Use global exception filters**:
+  ```typescript
+  @Catch()
+  export class AllExceptionsFilter implements ExceptionFilter {
+    catch(exception: unknown, host: ArgumentsHost) {
+      // Log error
+      // Return consistent error response
+      // Never expose stack traces to clients
+    }
+  }
+  ```
+
+- **Return consistent error responses**:
+  ```typescript
+  {
+    statusCode: 400,
+    message: 'Validation failed',
+    errors: [...],
+    timestamp: '2024-01-01T00:00:00Z',
+  }
+  ```
+
+- **Log internal errors properly**: Use structured logging
+  ```typescript
+  logger.error('Payment processing failed', {
+    transactionId,
+    error: error.message,
+    stack: error.stack,
+  });
+  ```
+
+### Frontend Error Handling
+
+- **Show user-friendly error messages**: Never expose stack traces
+- **Retry failed requests when appropriate**: Use exponential backoff
+- **Handle network errors gracefully**: Show offline indicators
+- **Provide recovery paths**: "Try again" buttons, alternative actions
+
+---
+
+# 📚 CODE QUALITY RULES
+
+- **Use meaningful variable and function names**:
+  ```typescript
+  // BAD
+  const d = new Date();
+  const u = getUser();
+
+  // GOOD
+  const createdAt = new Date();
+  const currentUser = await getUser();
+  ```
+
+- **Avoid magic values**: Use constants or enums
+  ```typescript
+  // BAD
+  if (status === 'S') { ... }
+
+  // GOOD
+  const TRANSACTION_STATUS = {
+    SUCCESS: 'SUCCESS',
+    PENDING: 'PENDING',
+    FAILED: 'FAILED',
+  };
+  if (status === TRANSACTION_STATUS.SUCCESS) { ... }
+  ```
+
+- **Write self-explanatory code**: Code should read like documentation
+- **Prefer explicit over implicit**: Make intentions clear
+- **Add comments only when logic is non-obvious**: Code should be self-documenting
+
+---
+
+# 🧠 COMMUNICATION & DOCUMENTATION
+
+- **Every major decision should be explainable**: If you can't explain it, reconsider it
+- **README must clearly describe**:
+  - Architecture decisions
+  - Trade-offs made
+  - Assumptions
+  - Future improvements
+  - Setup instructions
+  - API documentation
+
+---
+
+# 🚫 WHAT NOT TO DO
+
+- ❌ No hacks or workarounds
+- ❌ No hardcoded secrets or credentials
+- ❌ No sloppy UI or poor UX
+- ❌ No mixing concerns (business logic in controllers, etc.)
+- ❌ No "just make it work" mindset
+- ❌ No ignoring security best practices
+- ❌ No skipping error handling
+- ❌ No exposing sensitive information
+
+---
+
+# 🧠 FINAL OVERRIDE RULE
+
+> **If there is a conflict between speed and quality, choose quality.**
+
+This is a fintech application handling real money. Every decision should prioritize:
+1. Security
+2. Reliability
+3. Maintainability
+4. User experience
+5. Performance
+
+Speed of delivery is important, but never at the expense of these core principles.
+
+---
+
+# 📋 PROJECT-SPECIFIC REQUIREMENTS
+
+## Payment Link Platform Context
+
+**API Base URL**: `https://api-stage.mansatransfers.com`
+
+**Key Features**:
+- User authentication and management
+- Product creation and management
+- Payment link generation
+- Mobile money payment processing (MTN, Vodafone, AirtelTigo)
+- Transaction history and receipts
+- Public payment pages
+
+**Technology Stack**:
+- Backend: NestJS (TypeScript)
+- Frontend: Next.js (React, TypeScript)
+- Database: (To be determined - likely PostgreSQL)
+- Cache: Redis
+- Payment Provider: Mansa Transfers API
+
+**Critical Flows**:
+1. User registration → Email verification → Login
+2. Create product → Generate payment link → Share link
+3. Customer visits link → Enters details → Initiates payment → Payment processing → Receipt generation
+
+**Security Considerations**:
+- All payment endpoints must use idempotency keys
+- All user data must be properly scoped (users can only access their own data)
+- Payment links must be secure and time-limited if applicable
+- Transaction data must be immutable once confirmed
+- All API endpoints must be rate-limited
+- Sensitive operations must require re-authentication
+
+**API Endpoints (from Assessment):**
+- Authentication endpoints (login, register, refresh token)
+- User management endpoints (profile, update, password reset)
+- Product CRUD endpoints (create, read, update, delete products)
+- Payment link endpoints (create, list, update, delete, get details)
+- Payment flow endpoints (initiate payment, check status, webhooks)
+- Transaction endpoints (list transactions, get transaction details)
+- Receipt endpoints (generate, download receipts)
+- Public payment page endpoint (no authentication required)
+
+**Mobile Money Providers:**
+- MTN Mobile Money
+- Vodafone Cash
+- AirtelTigo Money
+
+**Payment Flow States:**
+- PENDING: Payment initiated, awaiting confirmation
+- PROCESSING: Payment being processed by provider
+- SUCCESS: Payment completed successfully
+- FAILED: Payment failed (with reason)
+- CANCELLED: Payment cancelled by user or timeout
+- REFUNDED: Payment refunded (if applicable)
+
+---
+
+# 🧪 TESTING RULES
+
+## Comprehensive Testing Strategy
+
+### Backend Testing
+- **Unit tests for all services**: Test business logic in isolation
+- **Integration tests for controllers**: Test API endpoints with mocked dependencies
+- **E2E tests for critical flows**: Test complete payment flow end-to-end
+- **Test coverage minimum**: 80% for services, 70% overall
+- **Mock external dependencies**: Never call real payment APIs in tests
+- **Test error scenarios**: Always test failure cases
+
+### Frontend Testing
+- **Component tests**: Test UI components in isolation
+- **Integration tests**: Test component interactions
+- **E2E tests**: Test critical user flows (payment flow, authentication)
+- **Accessibility tests**: Ensure WCAG compliance
+- **Visual regression tests**: Catch UI regressions
+
+### Test Best Practices
+```typescript
+// GOOD: Descriptive test names
+describe('PaymentService', () => {
+  it('should prevent duplicate payments with same idempotency key', async () => {
+    // Test implementation
+  });
+  
+  it('should throw error when payment amount is negative', async () => {
+    // Test implementation
+  });
+});
+```
+
+---
+
+# 📊 LOGGING & MONITORING RULES
+
+## Structured Logging
+
+- **Use structured logging**: Always log with context
+  ```typescript
+  logger.log('Payment initiated', {
+    transactionId,
+    userId,
+    amount,
+    paymentMethod: 'MOBILE_MONEY',
+    provider: 'MTN',
+  });
+  ```
+
+- **Log levels**:
+  - `error`: Errors that need immediate attention
+  - `warn`: Warnings about potential issues
+  - `log`: Important business events (payments, transactions)
+  - `debug`: Detailed debugging information
+  - `verbose`: Very detailed information
+
+- **Never log sensitive data**:
+  - Passwords (even hashed)
+  - Full credit card numbers
+  - Full API keys
+  - Personal identification numbers
+
+- **Always log payment events**:
+  - Payment initiation
+  - Payment status changes
+  - Payment failures (with reason)
+  - Webhook receipts
+  - Refunds
+
+---
+
+# 🗄️ DATABASE RULES
+
+## Database Best Practices
+
+- **Use migrations**: Never modify database schema directly
+- **Index frequently queried fields**: userId, transactionId, paymentLinkId, etc.
+- **Use transactions for critical operations**: Payment processing, balance updates
+- **Soft deletes for important data**: Don't hard delete transactions, payment links
+- **Audit trails**: Track who created/modified records and when
+- **Data retention policies**: Define how long to keep transaction data
+
+### Entity Design
+```typescript
+// GOOD: Proper entity with audit fields
+@Entity()
+export class Transaction {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  userId: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  amount: number;
+
+  @Column({ type: 'enum', enum: TransactionStatus })
+  status: TransactionStatus;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
+}
+```
+
+---
+
+# 🔌 API DESIGN RULES
+
+## RESTful API Standards
+
+- **Use proper HTTP methods**: GET, POST, PUT, PATCH, DELETE
+- **Use proper status codes**: 200, 201, 400, 401, 403, 404, 500, etc.
+- **Consistent response format**:
+  ```typescript
+  {
+    success: boolean,
+    data: T,
+    message?: string,
+    errors?: ValidationError[],
+    timestamp: string,
+  }
+  ```
+
+- **Version your API**: `/api/v1/...`
+- **Use pagination for list endpoints**:
+  ```typescript
+  {
+    data: T[],
+    pagination: {
+      page: number,
+      limit: number,
+      total: number,
+      totalPages: number,
+    }
+  }
+  ```
+
+- **Filtering and sorting**: Support query parameters for filtering and sorting
+- **Rate limiting**: Implement rate limiting on all endpoints
+- **API documentation**: Use Swagger/OpenAPI for API documentation
+
+---
+
+# 🚀 DEPLOYMENT & ENVIRONMENT RULES
+
+## Environment Management
+
+- **Never commit secrets**: Use environment variables
+- **Use different configs for different environments**: dev, staging, production
+- **Validate environment variables on startup**: Fail fast if required vars are missing
+- **Use secrets management**: Consider using AWS Secrets Manager, HashiCorp Vault, etc.
+
+### Environment Variables
+```typescript
+// Required environment variables
+- DATABASE_URL
+- REDIS_URL
+- JWT_SECRET
+- JWT_EXPIRATION
+- PAYMENT_API_KEY
+- PAYMENT_API_SECRET
+- PAYMENT_API_BASE_URL
+- WEBHOOK_SECRET
+- FRONTEND_URL
+- NODE_ENV
+```
+
+---
+
+# 📱 MOBILE MONEY INTEGRATION RULES
+
+## Payment Provider Integration
+
+- **Always handle provider errors gracefully**: Network failures, timeouts, invalid responses
+- **Implement retry logic**: With exponential backoff for transient failures
+- **Verify webhook signatures**: Never trust webhooks without verification
+- **Handle webhook idempotency**: Same webhook might be sent multiple times
+- **Store provider transaction IDs**: Link internal transactions with provider transactions
+- **Handle provider-specific quirks**: Each provider (MTN, Vodafone, AirtelTigo) may have different behaviors
+
+### Payment Provider Flow
+```typescript
+// Payment initiation flow
+1. Validate payment request
+2. Check idempotency key
+3. Create transaction record (PENDING)
+4. Call payment provider API
+5. Store provider transaction ID
+6. Return transaction reference to client
+7. Poll provider or wait for webhook
+8. Update transaction status
+9. Send notification to user
+```
+
+---
+
+# 🔄 STATE MANAGEMENT RULES
+
+## Frontend State Management
+
+- **Use React Query for server state**: Caching, synchronization, background updates
+- **Use Context API for global UI state**: Theme, user preferences
+- **Use local state for component-specific state**: Form inputs, UI toggles
+- **Never store sensitive data in state**: Tokens, payment details
+- **Optimistic updates**: Update UI optimistically, rollback on error
+
+---
+
+# 📦 DEPENDENCY MANAGEMENT RULES
+
+## Package Management
+
+- **Keep dependencies up to date**: Regularly update packages for security patches
+- **Use exact versions for critical packages**: Payment-related, security-related
+- **Audit dependencies regularly**: Use `npm audit` or `yarn audit`
+- **Document why each dependency is needed**: Especially for large dependencies
+- **Prefer well-maintained packages**: Check GitHub stars, recent updates, community support
+
+---
+
+# 🎯 BUSINESS LOGIC RULES
+
+## Payment Link Platform Specific
+
+- **Payment links must be unique**: Generate unique, non-guessable identifiers
+- **Payment links can be deactivated**: Allow merchants to pause/stop accepting payments
+- **Payment links can have expiry dates**: Optional time-limited links
+- **Payment links can have usage limits**: Maximum number of uses, maximum amount
+- **Products can be reused**: Same product can be used in multiple payment links
+- **Transactions are immutable**: Once confirmed, transaction data cannot be changed
+- **Receipts must be downloadable**: Generate PDF receipts for successful transactions
+
+---
+
+## Always Apply These Rules
+
+These rules apply to **ALL** code in this project. When in doubt:
+1. Prioritize security
+2. Follow the architecture patterns
+3. Write clean, maintainable code
+4. Think about the user experience
+5. Consider edge cases and error scenarios
+6. Test thoroughly
+7. Log important events
+8. Monitor in production
+

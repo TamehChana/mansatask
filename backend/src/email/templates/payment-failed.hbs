@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .error-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+    h1 {
+      color: #ef4444;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      margin: 30px 0;
+    }
+    .info-section {
+      background-color: #f9fafb;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .info-value {
+      color: #111827;
+      text-align: right;
+    }
+    .amount {
+      font-size: 28px;
+      font-weight: bold;
+      color: #111827;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .error-message {
+      background-color: #fef2f2;
+      border-left: 4px solid #ef4444;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+      color: #991b1b;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .action-button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="error-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </div>
+      <h1>Payment Failed</h1>
+      <p style="color: #6b7280; margin-top: 10px;">We were unable to process your payment</p>
+    </div>
+
+    <div class="content">
+      <p>Dear {{customerName}},</p>
+      
+      <p>Unfortunately, your payment could not be processed. Below are the details:</p>
+
+      <div class="info-section">
+        <div class="info-row">
+          <span class="info-label">Transaction Reference:</span>
+          <span class="info-value">{{transactionReference}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Merchant:</span>
+          <span class="info-value">{{merchantName}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Amount:</span>
+          <span class="info-value">{{formattedAmount}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Date:</span>
+          <span class="info-value">{{paymentDate}}</span>
+        </div>
+      </div>
+
+      {{#if failureReason}}
+      <div class="error-message">
+        <strong>Reason:</strong> {{failureReason}}
+      </div>
+      {{/if}}
+
+      <p style="margin-top: 30px;">
+        You can try again by visiting the payment link or contact the merchant for assistance.
+      </p>
+
+      <p>
+        If you continue to experience issues, please contact our support team.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>This is an automated email. Please do not reply to this message.</p>
+      <p style="margin-top: 10px;">© {{currentYear}} Payment Link Platform. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+
+

@@ -1,0 +1,195 @@
+// Prisma Schema for Payment Link Platform (MANSATASK)
+// Database: PostgreSQL
+// Currency: CFA (West African CFA Franc)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  MERCHANT
+  ADMIN // Future: For platform administrators
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  MTN
+  VODAFONE
+  AIRTELTIGO
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  name     String
+  password String // Hashed with bcrypt
+
+  // Password reset fields
+  passwordResetToken   String?   @map("password_reset_token")
+  passwordResetExpires DateTime? @map("password_reset_expires")
+  passwordResetAt      DateTime? @map("password_reset_at")
+
+  // Role (default: MERCHANT)
+  role UserRole @default(MERCHANT)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  products     Product[]
+  paymentLinks PaymentLink[]
+  transactions Transaction[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Product {
+  id          String  @id @default(uuid())
+  userId      String  @map("user_id")
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2) // Amount in CFA
+  imageUrl    String? @map("image_url") // Product image URL (S3 or local)
+  quantity    Int     @default(0) // Available units/stock (0 = unlimited or out of stock)
+
+  // Soft delete
+  deletedAt DateTime? @map("deleted_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentLinks PaymentLink[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("products")
+}
+
+model PaymentLink {
+  id          String  @id @default(uuid())
+  userId      String  @map("user_id")
+  productId   String? @map("product_id") // Optional: Can create link without product
+  title       String
+  description String?
+  amount      Decimal @db.Decimal(10, 2) // Amount in CFA
+  slug        String  @unique // Unique slug for public access (e.g., pay-abc123xyz)
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Expiration (optional)
+  expiresAt        DateTime? @map("expires_at") // Specific expiration date/time
+  expiresAfterDays Int?      @map("expires_after_days") // Store days for display purposes
+
+  // Usage limits (optional)
+  maxUses     Int? @map("max_uses") // Maximum number of times link can be used
+  currentUses Int  @default(0) @map("current_uses") // Current usage count
+
+  // Soft delete
+  deletedAt DateTime? @map("deleted_at")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([userId, isActive])
+  @@index([expiresAt])
+  @@index([isActive, expiresAt])
+  @@map("payment_links")
+}
+
+model Transaction {
+  id            String @id @default(uuid())
+  userId        String @map("user_id")
+  paymentLinkId String @map("payment_link_id")
+
+  // Transaction references
+  externalReference     String  @unique @map("external_reference") // Unique reference for public access
+  providerTransactionId String? @map("provider_transaction_id") // Provider's transaction ID
+
+  // Transaction details
+  status   TransactionStatus @default(PENDING)
+  provider PaymentProvider
+
+  // Customer information
+  customerName  String  @map("customer_name")
+  customerPhone String  @map("customer_phone")
+  customerEmail String? @map("customer_email")
+
+  // Amount (in CFA)
+  amount Decimal @db.Decimal(10, 2)
+
+  // Failure details (if failed)
+  failureReason    String? @map("failure_reason")
+  providerResponse Json?   @map("provider_response") // Store provider's response
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentLink PaymentLink @relation(fields: [paymentLinkId], references: [id], onDelete: Restrict)
+  receipt     Receipt?
+
+  @@index([userId])
+  @@index([paymentLinkId])
+  @@index([externalReference])
+  @@index([status])
+  @@index([userId, status])
+  @@index([providerTransactionId])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model Receipt {
+  id            String @id @default(uuid())
+  transactionId String @unique @map("transaction_id")
+  receiptNumber String @unique @map("receipt_number") // Format: RCP-2024-001234
+
+  // PDF storage (AWS S3)
+  pdfUrl  String  @map("pdf_url") // Full S3 URL
+  pdfPath String? @map("pdf_path") // S3 object key (for easier management)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([receiptNumber])
+  @@map("receipts")
+}

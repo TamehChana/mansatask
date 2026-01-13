@@ -1,0 +1,65 @@
+# Render Blueprint Configuration
+# This file allows you to define your entire stack in code
+# Deploy with: render blueprint launch
+
+services:
+  # Backend API
+  - type: web
+    name: payment-link-backend
+    env: node
+    region: oregon  # Change to your preferred region
+    plan: free  # Change to 'starter' for production
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: payment-link-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: payment-link-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: WEBHOOK_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false  # Set manually after Vercel deployment
+      - key: MANSA_API_KEY
+        sync: false  # Set manually
+      - key: MANSA_API_SECRET
+        sync: false  # Set manually
+      - key: EMAIL_USER
+        sync: false  # Set manually (optional)
+      - key: EMAIL_PASS
+        sync: false  # Set manually (optional)
+      - key: AWS_ACCESS_KEY_ID
+        sync: false  # Set manually (optional)
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false  # Set manually (optional)
+      - key: AWS_S3_BUCKET_NAME
+        sync: false  # Set manually (optional)
+
+databases:
+  # PostgreSQL Database
+  - name: payment-link-db
+    databaseName: payment_link_db
+    user: payment_link_user
+    plan: free  # Change to 'starter' for production
+    region: oregon  # Change to your preferred region
+
+  # Redis Cache
+  - name: payment-link-redis
+    type: redis
+    plan: free  # Change to 'starter' for production
+    region: oregon  # Change to your preferred region
+    maxmemoryPolicy: allkeys-lru
+
