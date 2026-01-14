@@ -10,7 +10,7 @@ services:
     region: oregon  # Change to your preferred region
     plan: free  # Change to 'starter' for production
     # Install devDependencies so Nest CLI is available for build
-    buildCommand: cd backend && npm install --include=dev && npx prisma generate && npm run build
+    buildCommand: cd backend && NODE_ENV=development npm install && npx prisma generate && npm run build
     startCommand: cd backend && npx prisma migrate deploy && npm run start:prod
     envVars:
       - key: NODE_ENV
