@@ -74,12 +74,12 @@ The Payment Link Platform is a full-stack web application designed for businesse
 
 - Node.js 18.x or higher
 - npm or yarn
-- Docker and Docker Compose
+- Docker and Docker Compose (recommended for local development)
 - PostgreSQL 15 (if not using Docker)
 - Redis 7 (if not using Docker)
-- AWS account (for S3 storage)
+- AWS account (for S3 storage - optional, falls back to local storage)
 - SendGrid account (for email service)
-- Mansa Transfers API credentials
+- Mansa Transfers API credentials (contact project owner for test credentials)
 
 ### Step 1: Clone the Repository
 
@@ -124,7 +124,17 @@ npm install
 cp .env.example .env
 ```
 
-4. Update the `.env` file with the following required variables:
+4. Update the `.env` file with your actual credentials:
+
+**Note**: Copy the `.env.example` file to `.env` and replace the placeholder values with your actual credentials. The `.env.example` file contains the template with all required environment variables.
+
+For interviewers/assessors: Contact the project owner to obtain:
+- Mansa Transfers API credentials (API key and secret)
+- SendGrid API key and verified sender email
+- AWS credentials (optional, if S3 storage is needed)
+- Or use test/demo credentials if provided
+
+Required variables to configure:
 
 ```env
 # Application
