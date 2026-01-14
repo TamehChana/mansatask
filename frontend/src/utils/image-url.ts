@@ -5,16 +5,11 @@
 
 /**
  * Get the API base URL from environment
- * Uses the same pattern as api-client.ts for consistency
+ * Uses the exact same pattern as api-client.ts for consistency
  */
 function getApiBaseUrl(): string {
-  // Use NEXT_PUBLIC_API_URL if available (same pattern as api-client.ts)
-  // This should be set to the full backend URL including /api (e.g., https://backend.onrender.com/api)
-  return process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' 
-    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000/api'
-        : '/api')
-    : '/api');
+  // Match api-client.ts pattern exactly: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 }
 
 /**
