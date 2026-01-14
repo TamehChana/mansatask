@@ -261,6 +261,7 @@ export class PaymentLinksService {
             id: true,
             name: true,
             email: true,
+            phone: true,
           },
         },
       },

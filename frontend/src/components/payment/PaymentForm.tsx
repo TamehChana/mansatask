@@ -46,6 +46,9 @@ export function PaymentForm({
     formState: { errors },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      paymentProvider: PaymentProvider.MTN,
+    },
   });
 
   const handleFormSubmit = async (data: PaymentFormData) => {
@@ -175,10 +178,7 @@ export function PaymentForm({
           id="paymentProvider"
           className="w-full px-3 py-2 border border-gray-300 rounded-button shadow-soft focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-body"
         >
-          <option value="">Select payment provider</option>
           <option value="MTN">MTN Mobile Money</option>
-          <option value="VODAFONE">Vodafone Cash</option>
-          <option value="AIRTELTIGO">AirtelTigo Money</option>
         </select>
         {errors.paymentProvider && (
           <p className="mt-1 text-small text-error">

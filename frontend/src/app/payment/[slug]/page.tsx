@@ -52,7 +52,9 @@ export default function PublicPaymentPage({
         currency: 'XOF', // CFA Franc
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(Number(paymentLink.amount))
+      }).format(
+        Number(paymentLink.product?.price || paymentLink.amount)
+      )
     : '';
 
   const isExpired =
@@ -137,20 +139,70 @@ export default function PublicPaymentPage({
                 </div>
               )}
 
-              {/* Payment Link Info */}
+              {/* Product Image */}
+              {paymentLink.product?.imageUrl && (
+                <div className="mb-6">
+                  <img
+                    src={paymentLink.product.imageUrl}
+                    alt={paymentLink.product.name || paymentLink.title}
+                    className="w-full h-64 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+
+              {/* Product/Payment Link Info */}
               <div className="border-b border-gray-200 pb-6">
                 <h2 className="text-h2 text-text-primary mb-2">
-                  {paymentLink.title}
+                  {paymentLink.product?.name || paymentLink.title}
                 </h2>
                 <p className="text-2xl font-semibold text-accent mb-4">
                   {formattedPrice}
                 </p>
-                {paymentLink.description && (
-                  <p className="text-text-primary whitespace-pre-wrap">
+                {paymentLink.product?.description && (
+                  <p className="text-text-primary whitespace-pre-wrap mb-4">
+                    {paymentLink.product.description}
+                  </p>
+                )}
+                {!paymentLink.product?.description && paymentLink.description && (
+                  <p className="text-text-primary whitespace-pre-wrap mb-4">
                     {paymentLink.description}
                   </p>
                 )}
               </div>
+
+              {/* Merchant Contact Information */}
+              {paymentLink.user && (
+                <div className="border-b border-gray-200 pb-6">
+                  <h3 className="text-h3 text-text-primary mb-4">
+                    Merchant Information
+                  </h3>
+                  <div className="space-y-2">
+                    <p className="text-text-primary">
+                      <span className="font-medium">Name:</span> {paymentLink.user.name}
+                    </p>
+                    <p className="text-text-primary">
+                      <span className="font-medium">Email:</span>{' '}
+                      <a
+                        href={`mailto:${paymentLink.user.email}`}
+                        className="text-accent hover:underline"
+                      >
+                        {paymentLink.user.email}
+                      </a>
+                    </p>
+                    {paymentLink.user.phone && (
+                      <p className="text-text-primary">
+                        <span className="font-medium">Phone:</span>{' '}
+                        <a
+                          href={`tel:${paymentLink.user.phone}`}
+                          className="text-accent hover:underline"
+                        >
+                          {paymentLink.user.phone}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Payment Form */}
               {isValid && (

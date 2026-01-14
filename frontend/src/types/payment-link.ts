@@ -1,5 +1,7 @@
 // Payment Link Types
 
+import type { Product } from './product';
+
 export interface PaymentLink {
   id: string;
   userId: string;
@@ -16,6 +18,14 @@ export interface PaymentLink {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+  // Included in public payment link endpoint
+  product?: Product | null;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+  } | null;
 }
 
 export interface CreatePaymentLinkDto {
