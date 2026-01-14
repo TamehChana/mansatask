@@ -9,6 +9,7 @@
  */
 function getApiBaseUrl(): string {
   // Match api-client.ts pattern exactly: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+  // Note: NEXT_PUBLIC_API_URL should already include /api (e.g., https://backend.onrender.com/api)
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 }
 
@@ -23,9 +24,7 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
   const apiBaseUrl = getApiBaseUrl();
 
   // Handle S3 URLs - extract key and use API proxy
-  // Format examples:
-  // - https://bucket.s3.region.amazonaws.com/products/userId/timestamp-random.ext
-  // - https://s3.region.amazonaws.com/bucket/products/userId/timestamp-random.ext
+  // Format: https://bucket.s3.region.amazonaws.com/products/userId/timestamp-random.ext
   if (imageUrl.startsWith('https://') && imageUrl.includes('.s3.')) {
     let key: string | null = null;
 
@@ -42,13 +41,13 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
     }
 
     if (key) {
-      // Decode URL-encoded key if needed (S3 URLs are sometimes encoded)
+      // Decode URL-encoded key if needed
       try {
         key = decodeURIComponent(key);
       } catch (e) {
         // If decoding fails, use original key
       }
-      // Use API proxy endpoint (more reliable, handles authentication if needed)
+      // Use API proxy endpoint
       return `${apiBaseUrl}/products/image/${encodeURIComponent(key)}`;
     }
 
@@ -61,10 +60,15 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
     return imageUrl;
   }
 
-  // Handle local storage paths
-  // If it starts with /uploads/ or uploads/, extract the path
-  if (imageUrl.startsWith('/uploads/') || imageUrl.startsWith('uploads/')) {
-    const path = imageUrl.replace(/^\/?uploads\//, '');
+  // Handle local storage paths: /uploads/products/userId/timestamp-random.ext
+  // Remove /uploads/ prefix and use API proxy
+  if (imageUrl.startsWith('/uploads/')) {
+    const path = imageUrl.replace(/^\/uploads\//, '');
+    return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
+  }
+  
+  if (imageUrl.startsWith('uploads/')) {
+    const path = imageUrl.replace(/^uploads\//, '');
     return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
   }
 
@@ -76,4 +80,3 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
   // Default: assume it's a storage key and use API proxy
   return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
 }
-
