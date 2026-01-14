@@ -50,7 +50,7 @@ export class EmailService {
     // Port 465 requires secure: true (SSL), port 587 uses secure: false (TLS)
     const isSecure = emailConfig.port === 465;
     
-    // Gmail-specific configuration for better reliability on cloud hosts
+    // SMTP configuration for SendGrid (works with Gmail too)
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
@@ -59,30 +59,24 @@ export class EmailService {
         user: emailConfig.user,
         pass: appPassword,
       },
-      // Extended timeouts for Gmail on cloud hosts
-      connectionTimeout: 45000, // 45 seconds - longer for Gmail
+      // Extended timeouts
+      connectionTimeout: 45000, // 45 seconds
       greetingTimeout: 45000,
       socketTimeout: 45000,
-      // Gmail-specific TLS options
+      // TLS options
       tls: {
-        // Don't reject unauthorized certificates (Gmail uses valid certs)
+        // Don't reject unauthorized certificates
         rejectUnauthorized: false,
         // Allow legacy TLS versions if needed
         minVersion: 'TLSv1',
-        // Try to negotiate better cipher suites
-        ciphers: 'SSLv3',
       },
-      // Use connection pooling for better reliability
+      // Connection pooling
       pool: false, // Disable pooling - create fresh connection each time
-      // Retry failed connections
       maxConnections: 1,
       maxMessages: 1,
       // Require TLS for port 587
       requireTLS: !isSecure && emailConfig.port === 587,
-      // Additional Gmail-specific options
-      debug: false, // Set to true for detailed SMTP logs
-      logger: false,
-    });
+    } as nodemailer.TransportOptions);
 
     // Templates directory
     this.templatesDir = path.join(process.cwd(), 'src', 'email', 'templates');
