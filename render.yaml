@@ -53,6 +53,9 @@ services:
     plan: free  # Change to 'starter' for production
     region: oregon  # Change to your preferred region
     maxmemoryPolicy: allkeys-lru
+    ipAllowList:
+      # Allow connections from the backend web service only
+      - source: payment-link-backend
 
 databases:
   # PostgreSQL Database
