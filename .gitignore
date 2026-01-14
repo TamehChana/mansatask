@@ -78,6 +78,5 @@ frontend/public/uploads/
 .turbo
 .vercel
 
-# Documentation (excluded for now)
-*.md
+# Documentation (README.md and DOCUMENTATION.md are included)
 
