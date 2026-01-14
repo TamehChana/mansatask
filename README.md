@@ -128,11 +128,13 @@ cp .env.example .env
 
 **Note**: Copy the `.env.example` file to `.env` and replace the placeholder values with your actual credentials. The `.env.example` file contains the template with all required environment variables.
 
-For interviewers/assessors: Contact the project owner to obtain:
+**For interviewers/assessors:** Contact the project owner via email to obtain the actual credential values for:
 - Mansa Transfers API credentials (API key and secret)
 - SendGrid API key and verified sender email
+- JWT secrets and webhook secret (or generate your own using `openssl rand -base64 32`)
 - AWS credentials (optional, if S3 storage is needed)
-- Or use test/demo credentials if provided
+
+The project owner will provide these credentials via email or a secure document.
 
 Required variables to configure:
 
