@@ -71,16 +71,21 @@ async function bootstrap() {
     app.enableCors({
       // Allow both with and without trailing slash
       origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
-          // Allow requests with no origin (like mobile apps or curl requests)
           return callback(null, true);
         }
-        // Normalize origin by removing trailing slash
+        
+        // Normalize both URLs by removing trailing slash
         const normalizedOrigin = origin.replace(/\/$/, '');
-        if (normalizedOrigin === normalizedFrontendUrl) {
+        const allowedOrigin = normalizedFrontendUrl?.replace(/\/$/, '') || '';
+        
+        if (normalizedOrigin === allowedOrigin) {
           callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
+          // Log for debugging (in production, this is expected for unauthorized origins)
+          logger.warn(`CORS: Origin ${origin} not allowed. Expected: ${allowedOrigin}`);
+          callback(null, false);
         }
       },
       credentials: true,
