@@ -166,8 +166,8 @@ export default function DashboardPage() {
 
             {/* Loading State */}
             {isLoading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="text-center py-12" aria-live="polite" aria-busy="true">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" aria-hidden="true"></div>
                 <p className="text-gray-600">Loading dashboard...</p>
               </div>
             )}

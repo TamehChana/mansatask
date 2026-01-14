@@ -92,24 +92,49 @@ export default function PaymentStatusPage({
         <div className="bg-surface rounded-card shadow-soft p-8 border border-gray-100">
           {/* Loading State */}
           {isLoading && (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+            <div className="text-center py-12" aria-live="polite" aria-busy="true">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" aria-hidden="true"></div>
               <p className="text-text-secondary">Loading payment status...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
-            <div className="text-center py-12">
-              <div className="rounded-md bg-red-50 p-4">
-                <h3 className="text-h3 text-error mb-2">
-                  Error Loading Payment
-                </h3>
-                <p className="text-small text-error">
-                  {error instanceof Error
-                    ? error.message
-                    : 'Failed to load payment status. Please try again.'}
-                </p>
+            <div className="text-center py-12" role="alert" aria-live="assertive">
+              <div className="rounded-md bg-red-50 border border-red-200 p-4 max-w-md mx-auto">
+                <div className="flex items-start mb-3">
+                  <svg
+                    className="h-6 w-6 text-error mr-3 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="text-h3 text-error mb-2">
+                      Error Loading Payment
+                    </h3>
+                    <p className="text-small text-red-700 mb-4">
+                      {error instanceof Error
+                        ? error.message
+                        : 'Failed to load payment status. Please try again.'}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-sm font-medium text-red-800 hover:text-red-900 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                      aria-label="Retry loading payment status"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -284,6 +309,8 @@ export default function PaymentStatusPage({
                       <button
                         onClick={handleDownloadReceipt}
                         disabled={downloadReceipt.isPending}
+                        aria-label={downloadReceipt.isPending ? 'Downloading receipt, please wait' : 'Download receipt PDF'}
+                        aria-busy={downloadReceipt.isPending}
                         className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-body font-medium rounded-button text-white bg-success hover:bg-success-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:opacity-50 disabled:cursor-not-allowed transition-fast shadow-soft hover:shadow-soft-md"
                       >
                         {downloadReceipt.isPending ? (
@@ -337,13 +364,14 @@ export default function PaymentStatusPage({
                       </Link>
                     </div>
                     {downloadError && (
-                      <div className="rounded-card bg-red-50 p-4">
+                      <div className="rounded-card bg-red-50 border border-red-200 p-4" role="alert" aria-live="assertive">
                         <div className="flex">
                           <div className="flex-shrink-0">
                             <svg
                               className="h-5 w-5 text-error"
                               viewBox="0 0 20 20"
                               fill="currentColor"
+                              aria-hidden="true"
                             >
                               <path
                                 fillRule="evenodd"
@@ -352,13 +380,20 @@ export default function PaymentStatusPage({
                               />
                             </svg>
                           </div>
-                          <div className="ml-3">
-                            <h3 className="text-small font-medium text-error">
+                          <div className="ml-3 flex-1">
+                            <h3 className="text-small font-medium text-error mb-1">
                               Download Failed
                             </h3>
-                            <div className="mt-2 text-small text-error">
+                            <div className="mt-2 text-small text-red-700">
                               <p>{downloadError}</p>
                             </div>
+                            <button
+                              onClick={handleDownloadReceipt}
+                              className="mt-3 text-sm font-medium text-red-800 hover:text-red-900 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                              aria-label="Retry downloading receipt"
+                            >
+                              Try again
+                            </button>
                           </div>
                         </div>
                       </div>

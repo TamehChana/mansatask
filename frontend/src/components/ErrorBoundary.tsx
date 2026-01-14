@@ -29,15 +29,46 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div 
+            className="min-h-screen flex items-center justify-center bg-gray-50"
+            role="alert"
+            aria-live="assertive"
+          >
             <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-              <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-              <p className="text-gray-600 mb-4">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
-              </p>
+              <div className="flex items-start mb-4">
+                <svg
+                  className="h-6 w-6 text-red-600 mr-3 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-red-600 mb-2">
+                    Something went wrong
+                  </h1>
+                  <p className="text-gray-600">
+                    We're sorry, but something unexpected happened. Please try refreshing the page.
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => window.location.reload()}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.location.reload();
+                  }
+                }}
+                aria-label="Refresh page to retry loading the application"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-colors font-medium"
               >
                 Refresh Page
               </button>

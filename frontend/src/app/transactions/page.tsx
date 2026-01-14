@@ -156,8 +156,8 @@ export default function TransactionsPage() {
 
             {/* Loading State */}
             {isLoading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+              <div className="text-center py-12" aria-live="polite" aria-busy="true">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" aria-hidden="true"></div>
                 <p className="text-text-secondary">Loading transactions...</p>
               </div>
             )}

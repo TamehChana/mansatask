@@ -85,21 +85,40 @@ export default function PublicPaymentPage({
         <div className="bg-surface rounded-card shadow-soft p-8 border border-gray-100">
           {/* Loading State */}
           {isLoading && (
-            <div className="text-center py-12">
+            <div className="text-center py-12" aria-live="polite" aria-busy="true">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" aria-hidden="true"></div>
               <p className="text-text-secondary">Loading payment link...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
-            <div className="text-center py-12">
-              <div className="rounded-md bg-error-red/10 border border-error-red/20 p-4 text-error-red">
-                <h3 className="text-h3 font-medium mb-2">
-                  {getUserFriendlyErrorMessage(error)}
-                </h3>
-                <p className="text-small mt-2">
-                  The payment link you're looking for may not exist, has been removed, or is not available.
-                </p>
+            <div className="text-center py-12" role="alert" aria-live="assertive">
+              <div className="rounded-md bg-error-red/10 border border-error-red/20 p-4 text-error-red max-w-md mx-auto">
+                <div className="flex items-start mb-3">
+                  <svg
+                    className="h-6 w-6 mr-3 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="flex-1 text-left">
+                    <h3 className="text-h3 font-medium mb-2">
+                      {getUserFriendlyErrorMessage(error)}
+                    </h3>
+                    <p className="text-small mt-2">
+                      The payment link you're looking for may not exist, has been removed, or is not available.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
