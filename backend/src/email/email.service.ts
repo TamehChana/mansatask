@@ -60,23 +60,28 @@ export class EmailService {
         pass: appPassword,
       },
       // Extended timeouts for Gmail on cloud hosts
-      connectionTimeout: 30000, // 30 seconds
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
+      connectionTimeout: 45000, // 45 seconds - longer for Gmail
+      greetingTimeout: 45000,
+      socketTimeout: 45000,
       // Gmail-specific TLS options
       tls: {
         // Don't reject unauthorized certificates (Gmail uses valid certs)
         rejectUnauthorized: false,
         // Allow legacy TLS versions if needed
         minVersion: 'TLSv1',
+        // Try to negotiate better cipher suites
+        ciphers: 'SSLv3',
       },
       // Use connection pooling for better reliability
-      pool: true,
+      pool: false, // Disable pooling - create fresh connection each time
       // Retry failed connections
       maxConnections: 1,
-      maxMessages: 3,
+      maxMessages: 1,
       // Require TLS for port 587
       requireTLS: !isSecure && emailConfig.port === 587,
+      // Additional Gmail-specific options
+      debug: false, // Set to true for detailed SMTP logs
+      logger: false,
     });
 
     // Templates directory
