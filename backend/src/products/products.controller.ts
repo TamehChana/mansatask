@@ -71,10 +71,18 @@ export class ProductsController {
       // Path will be like: /api/products/image/products/userId/timestamp-random.ext
       const fullPath = req.path;
       const imagePathPrefix = '/api/products/image/';
-      const key = fullPath.replace(imagePathPrefix, '');
+      let key = fullPath.replace(imagePathPrefix, '');
       
       if (!key) {
         throw new BadRequestException('Image key is required');
+      }
+
+      // Decode URL-encoded key (in case it's double-encoded or from query params)
+      try {
+        key = decodeURIComponent(key);
+      } catch (e) {
+        // If decoding fails, use original key
+        // The key might already be decoded by Express
       }
 
       const imageBuffer = await this.storageService.getFile(key);
