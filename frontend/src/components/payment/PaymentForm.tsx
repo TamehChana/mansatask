@@ -17,7 +17,7 @@ const paymentSchema = z.object({
     ),
   customerEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
   paymentProvider: z.enum(['MTN', 'VODAFONE', 'AIRTELTIGO'], {
-    errorMap: () => ({ message: 'Please select a payment provider' }),
+    message: 'Please select a payment provider',
   }),
 });
 
@@ -63,7 +63,7 @@ export function PaymentForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Error Message */}
-      {(showError || error) && (
+      {(showError || !!error) && (
         <div className="rounded-md bg-red-50 p-4">
           <div className="flex">
             <div className="flex-shrink-0">

@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { PaymentProvider, TransactionStatus } from '@/types/payment';
 
 export interface DashboardStats {
   totalRevenue: number;
@@ -13,8 +14,8 @@ export interface DashboardStats {
   recentTransactions: Array<{
     id: string;
     externalReference: string;
-    status: string;
-    provider: string;
+    status: TransactionStatus;
+    provider: PaymentProvider;
     amount: number;
     customerName: string;
     customerPhone: string;
@@ -40,5 +41,6 @@ export const dashboardService = {
     return response.data;
   },
 };
+
 
 

@@ -52,7 +52,7 @@ export function ProfileForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Error Message */}
-      {(showError || error) && (
+      {(showError || !!error) && (
         <div className="rounded-md bg-red-50 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
