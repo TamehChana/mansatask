@@ -55,9 +55,11 @@ databases:
     plan: free  # Change to 'starter' for production
     region: oregon  # Change to your preferred region
 
-  # Redis Cache
-  - name: payment-link-redis
-    type: redis
+  # Redis Cache (defined as a separate Redis service)
+
+  # Redis service
+  - type: redis
+    name: payment-link-redis
     plan: free  # Change to 'starter' for production
     region: oregon  # Change to your preferred region
     maxmemoryPolicy: allkeys-lru
