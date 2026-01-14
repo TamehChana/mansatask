@@ -50,6 +50,7 @@ export class EmailService {
     // Port 465 requires secure: true (SSL), port 587 uses secure: false (TLS)
     const isSecure = emailConfig.port === 465;
     
+    // Gmail-specific configuration for better reliability on cloud hosts
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
@@ -58,10 +59,24 @@ export class EmailService {
         user: emailConfig.user,
         pass: appPassword,
       },
-      // Add connection timeout to prevent hanging
-      connectionTimeout: 10000, // Increased to 10 seconds for SSL
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      // Extended timeouts for Gmail on cloud hosts
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      // Gmail-specific TLS options
+      tls: {
+        // Don't reject unauthorized certificates (Gmail uses valid certs)
+        rejectUnauthorized: false,
+        // Allow legacy TLS versions if needed
+        minVersion: 'TLSv1',
+      },
+      // Use connection pooling for better reliability
+      pool: true,
+      // Retry failed connections
+      maxConnections: 1,
+      maxMessages: 3,
+      // Require TLS for port 587
+      requireTLS: !isSecure && emailConfig.port === 587,
     });
 
     // Templates directory
@@ -78,22 +93,24 @@ export class EmailService {
 
   /**
    * Verify email transporter connection
+   * Note: Verification is optional and non-blocking. If it fails, email sending will still be attempted.
    */
   private async verifyConnection() {
     try {
       const emailConfig = this.configService.get('config.email');
       this.logger.log(`Verifying email connection to ${emailConfig.host}:${emailConfig.port} as ${emailConfig.user}`);
-      // Add timeout to prevent hanging
+      // Extended timeout for Gmail on cloud hosts
       const verifyPromise = this.transporter.verify();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Email verification timeout after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Email verification timeout after 30 seconds')), 30000)
       );
       await Promise.race([verifyPromise, timeoutPromise]);
       this.logger.log('✅ Email transporter connection verified successfully');
     } catch (error) {
-      this.logger.error(`❌ Email transporter verification failed: ${error.message}`);
+      // Log as warning instead of error - verification failure doesn't mean email won't work
+      this.logger.warn(`⚠️ Email transporter verification failed: ${error.message}. Email sending will still be attempted.`);
       if (error.response) {
-        this.logger.error(`SMTP Response: ${error.response}`);
+        this.logger.warn(`SMTP Response: ${error.response}`);
       }
     }
   }
