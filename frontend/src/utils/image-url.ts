@@ -4,24 +4,17 @@
  */
 
 /**
- * Get the API base URL from environment or construct from window location
+ * Get the API base URL from environment
+ * Uses the same pattern as api-client.ts for consistency
  */
 function getApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    // Use NEXT_PUBLIC_API_URL if available (most reliable)
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
-    }
-    // Fallback for localhost development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3000/api';
-    }
-    // For production/preview deployments, use relative path
-    // This assumes the backend API is on the same domain or configured via proxy
-    return '/api';
-  }
-  // Server-side rendering fallback
-  return '/api';
+  // Use NEXT_PUBLIC_API_URL if available (same pattern as api-client.ts)
+  // This should be set to the full backend URL including /api (e.g., https://backend.onrender.com/api)
+  return process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' 
+    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : '/api')
+    : '/api');
 }
 
 /**
