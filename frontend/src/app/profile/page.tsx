@@ -17,7 +17,7 @@ export default function ProfilePage() {
     error: updateError,
   } = useUpdateProfile();
 
-  const handleSubmit = async (data: { name?: string; email?: string }) => {
+  const handleSubmit = async (data: { name?: string; email?: string; phone?: string }) => {
     try {
       await updateProfileAsync(data);
       // Profile updated successfully - the mutation will handle cache updates
@@ -74,6 +74,52 @@ export default function ProfilePage() {
               {/* Profile Content */}
               {profile && !isLoading && !error && (
                 <div className="space-y-6">
+                  {/* Phone Number Reminder */}
+                  {!profile.phone && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-amber-600 mt-0.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center">
+                            <h3 className="text-sm font-medium text-amber-800">
+                              Add your phone number
+                            </h3>
+                            <svg
+                              className="h-4 w-4 text-amber-600 mx-2"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </div>
+                          <p className="mt-1 text-sm text-amber-700">
+                            Your phone number will appear on receipts for your customers. Add it below to complete your profile.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Profile Header */}
                   <div className="border-b border-gray-200 pb-6">
                     <h2 className="text-h2 text-text-primary mb-2">
