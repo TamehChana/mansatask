@@ -5,26 +5,31 @@
 
 /**
  * Get the API base URL from environment or window location
- * Uses the same pattern as api-client.ts but with better fallback handling
+ * Handles both build-time and runtime scenarios
  */
 function getApiBaseUrl(): string {
   // In Next.js, NEXT_PUBLIC_* env vars are embedded at build time
-  // So if not set, it will be undefined, and we need a fallback
+  // If set at build time, it will be available here
+  const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  
   if (typeof window !== 'undefined') {
-    // Client-side: Check environment variable first
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL;
+    // Client-side: Use environment variable if available
+    if (envApiUrl) {
+      return envApiUrl;
     }
+    
     // Fallback: Use localhost for development
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3000/api';
     }
-    // Production fallback: Construct from window location (assumes API is on same domain)
-    // Or use hardcoded backend URL if known
-    return '/api'; // Relative path fallback
+    
+    // Production fallback: Use hardcoded backend URL
+    // This ensures images work even if env var wasn't set at build time
+    return 'https://payment-link-backend.onrender.com/api';
   }
-  // Server-side fallback
-  return process.env.NEXT_PUBLIC_API_URL || '/api';
+  
+  // Server-side: Use environment variable or fallback
+  return envApiUrl || 'https://payment-link-backend.onrender.com/api';
 }
 
 /**
@@ -61,12 +66,8 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
       } catch (e) {
         // If decoding fails, use original key
       }
-      // Use API proxy endpoint - ensure apiBaseUrl is not empty
-      if (apiBaseUrl) {
-        return `${apiBaseUrl}/products/image/${encodeURIComponent(key)}`;
-      }
-      // If apiBaseUrl is empty, fallback to direct S3 URL
-      return imageUrl;
+      // Use API proxy endpoint
+      return `${apiBaseUrl}/products/image/${encodeURIComponent(key)}`;
     }
 
     // Fallback to direct S3 URL if we can't extract key
@@ -82,35 +83,20 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
   // Remove /uploads/ prefix and use API proxy
   if (imageUrl.startsWith('/uploads/')) {
     const path = imageUrl.replace(/^\/uploads\//, '');
-    if (apiBaseUrl) {
-      return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
-    }
-    // If apiBaseUrl is empty, return relative path (won't work but won't crash)
-    return `/api/products/image/${encodeURIComponent(path)}`;
+    return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
   }
   
   if (imageUrl.startsWith('uploads/')) {
     const path = imageUrl.replace(/^uploads\//, '');
-    if (apiBaseUrl) {
-      return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
-    }
-    return `/api/products/image/${encodeURIComponent(path)}`;
+    return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
   }
 
   // If it looks like a storage key (starts with products/), use API proxy
+  // This handles cases where imageUrl is just "products/userId/timestamp.ext"
   if (imageUrl.startsWith('products/')) {
-    if (apiBaseUrl) {
-      return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
-    }
-    // Ensure we always return a valid URL
-    return `/api/products/image/${encodeURIComponent(imageUrl)}`;
+    return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
   }
 
   // Default: assume it's a storage key and use API proxy
-  // Ensure we always return a valid URL with API base
-  if (apiBaseUrl) {
-    return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
-  }
-  // Final fallback - use relative path
-  return `/api/products/image/${encodeURIComponent(imageUrl)}`;
+  return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
 }
