@@ -47,18 +47,21 @@ export class EmailService {
     // Remove spaces from App Password if present
     const appPassword = (emailConfig.pass || '').replace(/\s/g, '');
     
+    // Port 465 requires secure: true (SSL), port 587 uses secure: false (TLS)
+    const isSecure = emailConfig.port === 465;
+    
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,
       port: emailConfig.port,
-      secure: false, // true for 465, false for other ports
+      secure: isSecure, // true for 465 (SSL), false for 587 (TLS)
       auth: {
         user: emailConfig.user,
         pass: appPassword,
       },
       // Add connection timeout to prevent hanging
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000,
+      connectionTimeout: 10000, // Increased to 10 seconds for SSL
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     // Templates directory
