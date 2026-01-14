@@ -12,8 +12,27 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage or Zustand store
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    // Get token from Zustand store (stored as JSON in localStorage under 'auth-storage')
+    let token: string | null = null;
+    
+    if (typeof window !== 'undefined') {
+      try {
+        // Try to get from Zustand storage first
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          token = parsed?.state?.accessToken || null;
+        }
+        
+        // Fallback to direct localStorage (for backward compatibility)
+        if (!token) {
+          token = localStorage.getItem('accessToken');
+        }
+      } catch (error) {
+        // If parsing fails, try direct localStorage
+        token = localStorage.getItem('accessToken');
+      }
+    }
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -39,8 +58,26 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh token
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        // Try to refresh token - get from Zustand storage
+        let refreshToken: string | null = null;
+        
+        if (typeof window !== 'undefined') {
+          try {
+            // Try to get from Zustand storage first
+            const authStorage = localStorage.getItem('auth-storage');
+            if (authStorage) {
+              const parsed = JSON.parse(authStorage);
+              refreshToken = parsed?.state?.refreshToken || null;
+            }
+            
+            // Fallback to direct localStorage
+            if (!refreshToken) {
+              refreshToken = localStorage.getItem('refreshToken');
+            }
+          } catch (error) {
+            refreshToken = localStorage.getItem('refreshToken');
+          }
+        }
 
         if (refreshToken) {
           const response = await axios.post(
@@ -51,7 +88,18 @@ apiClient.interceptors.response.use(
           const { accessToken } = response.data;
 
           if (accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
+            // Update both Zustand storage and direct localStorage
+            try {
+              const authStorage = localStorage.getItem('auth-storage');
+              if (authStorage) {
+                const parsed = JSON.parse(authStorage);
+                parsed.state.accessToken = accessToken;
+                localStorage.setItem('auth-storage', JSON.stringify(parsed));
+              }
+            } catch (error) {
+              // Fallback to direct localStorage
+              localStorage.setItem('accessToken', accessToken);
+            }
 
             // Retry original request with new token
             if (originalRequest.headers) {
@@ -64,6 +112,8 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed - logout user
         if (typeof window !== 'undefined') {
+          // Clear both Zustand storage and direct localStorage
+          localStorage.removeItem('auth-storage');
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           window.location.href = '/login';

@@ -24,25 +24,47 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      setAuth: (user, accessToken, refreshToken) =>
-        set({
+      setAuth: (user, accessToken, refreshToken) => {
+        // Also store in localStorage directly for API client compatibility
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+          }
+        }
+        return set({
           user,
           accessToken,
           refreshToken,
           isAuthenticated: true,
-        }),
-      setTokens: (accessToken, refreshToken) =>
-        set((state) => ({
+        });
+      },
+      setTokens: (accessToken, refreshToken) => {
+        // Also store in localStorage directly for API client compatibility
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+          }
+        }
+        return set((state) => ({
           accessToken,
           refreshToken: refreshToken || state.refreshToken,
-        })),
-      logout: () =>
-        set({
+        }));
+      },
+      logout: () => {
+        // Also clear localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
+        return set({
           user: null,
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
-        }),
+        });
+      },
     }),
     {
       name: 'auth-storage',
