@@ -235,37 +235,88 @@ export class EmailService {
   }
 
   /**
-   * Send password reset email
+   * Send password reset email with retry logic
    */
   async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
-    try {
-      this.logger.log(`Attempting to send password reset email to: ${data.email}`);
-      
-      const template = await this.loadTemplate('password-reset');
-      const html = template({
-        ...data,
-      });
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-      const emailConfig = this.configService.get('config.email');
-      
-      if (!emailConfig || !emailConfig.user || !emailConfig.pass) {
-        throw new Error('Email configuration is missing. Please check EMAIL_USER and EMAIL_PASS in .env file');
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.log(`Attempting to send password reset email to: ${data.email} (attempt ${attempt}/${maxRetries})`);
+        
+        const template = await this.loadTemplate('password-reset');
+        const html = template({
+          ...data,
+        });
+
+        const emailConfig = this.configService.get('config.email');
+        
+        if (!emailConfig || !emailConfig.user || !emailConfig.pass) {
+          throw new Error('Email configuration is missing. Please check EMAIL_USER and EMAIL_PASS in .env file');
+        }
+
+        const mailOptions: nodemailer.SendMailOptions = {
+          from: emailConfig.from || emailConfig.user,
+          to: data.email,
+          subject: 'Password Reset Request - MANSATASK',
+          html,
+        };
+
+        this.logger.log(`Sending password reset email from: ${mailOptions.from} to: ${mailOptions.to}`);
+        
+        // Try to send with a fresh connection if previous attempts failed
+        if (attempt > 1) {
+          // Close existing connection and create new transporter
+          try {
+            this.transporter.close();
+          } catch (e) {
+            // Ignore close errors
+          }
+          // Recreate transporter for retry
+          const appPassword = (emailConfig.pass || '').replace(/\s/g, '');
+          const isSecure = emailConfig.port === 465;
+          this.transporter = nodemailer.createTransport({
+            host: emailConfig.host,
+            port: emailConfig.port,
+            secure: isSecure,
+            auth: {
+              user: emailConfig.user,
+              pass: appPassword,
+            },
+            connectionTimeout: 30000,
+            greetingTimeout: 30000,
+            socketTimeout: 30000,
+            tls: {
+              rejectUnauthorized: false,
+              minVersion: 'TLSv1',
+            },
+            pool: true,
+            maxConnections: 1,
+            maxMessages: 3,
+            requireTLS: !isSecure && emailConfig.port === 587,
+          });
+        }
+
+        const info = await this.transporter.sendMail(mailOptions);
+        this.logger.log(`Password reset email sent successfully. Message ID: ${info.messageId}`);
+        return; // Success - exit retry loop
+      } catch (error) {
+        lastError = error as Error;
+        this.logger.warn(`Password reset email attempt ${attempt} failed: ${error.message}`);
+        
+        // If not the last attempt, wait before retrying (exponential backoff)
+        if (attempt < maxRetries) {
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // 1s, 2s, 4s max
+          this.logger.log(`Retrying in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-
-      const mailOptions: nodemailer.SendMailOptions = {
-        from: emailConfig.from || emailConfig.user,
-        to: data.email,
-        subject: 'Password Reset Request - MANSATASK',
-        html,
-      };
-
-      this.logger.log(`Sending password reset email from: ${mailOptions.from} to: ${mailOptions.to}`);
-      const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Password reset email sent successfully. Message ID: ${info.messageId}`);
-    } catch (error) {
-      this.logger.error(`Failed to send password reset email: ${error.message}`, error.stack);
-      throw error;
     }
+
+    // All retries failed
+    this.logger.error(`Failed to send password reset email after ${maxRetries} attempts: ${lastError?.message}`, lastError?.stack);
+    throw lastError || new Error('Failed to send password reset email');
   }
 
   /**
