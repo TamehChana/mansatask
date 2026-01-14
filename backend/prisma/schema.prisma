@@ -43,6 +43,7 @@ model User {
   email    String @unique
   name     String
   password String // Hashed with bcrypt
+  phone    String? // Merchant phone number
 
   // Password reset fields
   passwordResetToken   String?   @map("password_reset_token")

@@ -111,6 +111,9 @@ export class ReceiptsService {
         doc.fontSize(11).font('Helvetica');
         doc.text(`Name: ${transaction.user.name}`);
         doc.text(`Email: ${transaction.user.email}`);
+        if (transaction.user.phone) {
+          doc.text(`Phone: ${transaction.user.phone}`);
+        }
         doc.moveDown();
 
         // Product/Service Information
@@ -239,6 +242,7 @@ export class ReceiptsService {
             id: true,
             name: true,
             email: true,
+            phone: true,
           },
         },
         paymentLink: {
@@ -340,6 +344,7 @@ export class ReceiptsService {
                 id: true,
                 name: true,
                 email: true,
+                phone: true,
               },
             },
           },

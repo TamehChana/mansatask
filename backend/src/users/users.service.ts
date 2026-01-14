@@ -20,6 +20,7 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -59,6 +60,9 @@ export class UsersService {
     if (updateProfileDto.email) {
       updateData.email = updateProfileDto.email.toLowerCase();
     }
+    if (updateProfileDto.phone !== undefined) {
+      updateData.phone = updateProfileDto.phone || null;
+    }
 
     // Update user
     const user = await this.prisma.user.update({
@@ -68,6 +72,7 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
         createdAt: true,
         updatedAt: true,
@@ -77,6 +82,7 @@ export class UsersService {
     return user;
   }
 }
+
 
 
 

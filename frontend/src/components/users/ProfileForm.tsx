@@ -9,6 +9,7 @@ import type { UserProfile } from '@/types/user';
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -41,6 +42,7 @@ export function ProfileForm({
     defaultValues: {
       name: profile.name,
       email: profile.email,
+      phone: profile.phone || '',
     },
   });
 
@@ -119,6 +121,29 @@ export function ProfileForm({
         )}
         <p className="mt-1 text-xs text-gray-500">
           Your email address is used for login and notifications
+        </p>
+      </div>
+
+      {/* Phone Field */}
+      <div>
+        <label
+          htmlFor="phone"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Phone Number
+        </label>
+        <input
+          {...register('phone')}
+          id="phone"
+          type="tel"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="+233 XX XXX XXXX"
+        />
+        {errors.phone && (
+          <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          Your phone number will appear on receipts
         </p>
       </div>
 

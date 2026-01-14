@@ -211,3 +211,4 @@ Write-Host "3. Monitor health endpoint: $API_BASE_URL/health" -ForegroundColor G
 Write-Host "4. Watch for slow request warnings in logs" -ForegroundColor Gray
 Write-Host ""
 
+

@@ -4,6 +4,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   createdAt: string;
   updatedAt: string;
@@ -12,7 +13,9 @@ export interface UserProfile {
 export interface UpdateProfileDto {
   name?: string;
   email?: string;
+  phone?: string;
 }
+
 
 
 

@@ -1,29 +1,8 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { getUserFriendlyErrorMessage } from '@/utils/error-messages';
-
-// Determine backend URL based on current hostname
-const getBackendUrl = (): string => {
-  // If explicitly set in env, use that
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  // If running in browser, detect the hostname and use it for backend
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // If accessing via network IP, use that IP for backend
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return `http://${hostname}:3000/api`;
-    }
-  }
-
-  // Default to localhost
-  return 'http://localhost:3000/api';
-};
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
-  baseURL: getBackendUrl(),
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -33,21 +12,11 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from Zustand store localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const authStorage = localStorage.getItem('auth-storage');
-        if (authStorage) {
-          const authState = JSON.parse(authStorage);
-          const token = authState?.state?.accessToken;
+    // Get token from localStorage or Zustand store
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
-          if (token && config.headers) {
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        }
-      } catch (error) {
-        // Invalid storage format, continue without token
-      }
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
@@ -71,71 +40,40 @@ apiClient.interceptors.response.use(
 
       try {
         // Try to refresh token
-        if (typeof window !== 'undefined') {
-          const authStorage = localStorage.getItem('auth-storage');
-          if (authStorage) {
-            try {
-              const authState = JSON.parse(authStorage);
-              const refreshToken = authState?.state?.refreshToken;
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
 
-              if (refreshToken) {
-                const response = await axios.post(
-                  `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
-                  { refreshToken },
-                );
+        if (refreshToken) {
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
+            { refreshToken },
+          );
 
-                const { accessToken } = response.data;
+          const { accessToken } = response.data;
 
-                if (accessToken) {
-                  // Update Zustand store via localStorage
-                  const updatedState = {
-                    ...authState,
-                    state: {
-                      ...authState.state,
-                      accessToken,
-                    },
-                  };
-                  localStorage.setItem('auth-storage', JSON.stringify(updatedState));
+          if (accessToken && typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', accessToken);
 
-                  // Retry original request with new token
-                  if (originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-                  }
-
-                  return apiClient(originalRequest);
-                }
-              }
-            } catch (e) {
-              // Invalid storage, continue to logout
+            // Retry original request with new token
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             }
+
+            return apiClient(originalRequest);
           }
         }
       } catch (refreshError) {
         // Refresh failed - logout user
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth-storage');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
       }
     }
 
-    // Transform error to user-friendly message
-    const userFriendlyMessage = getUserFriendlyErrorMessage(error);
-    
-    // Create a user-friendly error that won't trigger browser error icons
-    // All technical details are hidden from users
-    const userFriendlyError = new Error(userFriendlyMessage);
-    
-    // Mark this as a user-friendly error to prevent browser error icons
-    (userFriendlyError as any).__isUserFriendly = true;
-    
-    // Preserve original error for debugging (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      (userFriendlyError as any).originalError = error;
-    }
-    
-    return Promise.reject(userFriendlyError);
+    // Handle other errors
+    return Promise.reject(error);
   },
 );
 
