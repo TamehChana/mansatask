@@ -8,6 +8,7 @@ import { useProduct, useProductMutations } from '@/hooks/products/useProducts';
 import { BackButton } from '@/components/ui/BackButton';
 import { getUserFriendlyErrorMessage } from '@/utils/error-messages';
 import { useToast } from '@/components/ui/ToastProvider';
+import { getProductImageUrl } from '@/utils/image-url';
 
 export default function ProductDetailPage({
   params,
@@ -109,31 +110,51 @@ export default function ProductDetailPage({
             {product && !isLoading && !error && (
               <div className="space-y-6">
                 {/* Product Image */}
-                {product.imageUrl && (() => {
-                  // Extract key from S3 URL if it's an S3 URL
-                  let imageSrc = product.imageUrl;
-                  if (product.imageUrl.startsWith('https://') && product.imageUrl.includes('.s3.')) {
-                    const keyMatch = product.imageUrl.match(/\.amazonaws\.com\/(.+)$/);
-                    if (keyMatch && keyMatch[1]) {
-                      const apiBaseUrl = typeof window !== 'undefined' 
-                        ? (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-                            ? 'http://localhost:3000/api'
-                            : `${window.location.protocol}//${window.location.hostname}:3000/api`)
-                        : '/api';
-                      imageSrc = `${apiBaseUrl}/products/image/${keyMatch[1]}`;
-                    }
-                  } else if (!product.imageUrl.startsWith('http://') && !product.imageUrl.startsWith('https://')) {
-                    imageSrc = `${typeof window !== 'undefined' ? window.location.origin : ''}${product.imageUrl}`;
+                {(() => {
+                  const imageUrl = getProductImageUrl(product.imageUrl);
+
+                  if (!imageUrl) {
+                    return (
+                      <div className="w-full h-64 bg-gray-100 rounded-card border border-gray-200 flex items-center justify-center">
+                        <svg
+                          className="w-24 h-24 text-gray-300"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    );
                   }
-                  
+
                   return (
                     <div className="w-full">
                       <img
-                        src={imageSrc}
+                        src={imageUrl}
                         alt={product.name}
                         className="w-full h-auto max-h-96 object-contain rounded-card border border-gray-200"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
+                          // Show placeholder if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.image-error-placeholder')) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'image-error-placeholder w-full h-64 bg-gray-100 rounded-card border border-gray-200 flex items-center justify-center';
+                            placeholder.innerHTML = `
+                              <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                            `;
+                            parent.appendChild(placeholder);
+                          }
                         }}
                       />
                     </div>

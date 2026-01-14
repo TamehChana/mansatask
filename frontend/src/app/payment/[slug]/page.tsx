@@ -8,6 +8,7 @@ import { PaymentProvider } from '@/types/payment';
 import { PaymentForm, type PaymentFormData } from '@/components/payment/PaymentForm';
 import { useToast } from '@/components/ui/ToastProvider';
 import { getUserFriendlyErrorMessage } from '@/utils/error-messages';
+import { getProductImageUrl } from '@/utils/image-url';
 
 export default function PublicPaymentPage({
   params,
@@ -159,28 +160,16 @@ export default function PublicPaymentPage({
               )}
 
               {/* Product Image */}
-              {paymentLink.product?.imageUrl && (() => {
-                // Extract key from S3 URL if it's an S3 URL
-                let imageSrc = paymentLink.product.imageUrl;
-                if (paymentLink.product.imageUrl.startsWith('https://') && paymentLink.product.imageUrl.includes('.s3.')) {
-                  const keyMatch = paymentLink.product.imageUrl.match(/\.amazonaws\.com\/(.+)$/);
-                  if (keyMatch && keyMatch[1]) {
-                    const apiBaseUrl = typeof window !== 'undefined' 
-                      ? (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-                          ? 'http://localhost:3000/api'
-                          : process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//${window.location.hostname}:3000/api`)
-                      : '/api';
-                    imageSrc = `${apiBaseUrl}/products/image/${keyMatch[1]}`;
-                  }
-                } else if (!paymentLink.product.imageUrl.startsWith('http://') && !paymentLink.product.imageUrl.startsWith('https://')) {
-                  imageSrc = `${typeof window !== 'undefined' ? window.location.origin : ''}${paymentLink.product.imageUrl}`;
-                }
+              {(() => {
+                const imageUrl = getProductImageUrl(paymentLink.product?.imageUrl || null);
+                
+                if (!imageUrl) return null;
                 
                 return (
                   <div className="mb-6">
                     <img
-                      src={imageSrc}
-                      alt={paymentLink.product.name || paymentLink.title}
+                      src={imageUrl}
+                      alt={paymentLink.product?.name || paymentLink.title}
                       className="w-full h-auto max-h-96 object-contain rounded-lg border border-gray-200"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';

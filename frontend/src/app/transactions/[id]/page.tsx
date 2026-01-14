@@ -118,94 +118,117 @@ export default function TransactionDetailPage({
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background flex">
-        {/* Sidebar Navigation */}
-        <aside className="w-64 flex-shrink-0">
+      <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+        {/* Sidebar Navigation - Hidden on mobile, shown on desktop */}
+        <aside className="hidden lg:block w-64 flex-shrink-0">
           <Navigation />
         </aside>
+        {/* Mobile Navigation */}
+        <Navigation />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto lg:ml-0">
           {/* Header */}
           <header className="bg-surface border-b border-gray-200">
-            <div className="max-w-content mx-auto px-6 py-8">
+            <div className="max-w-content-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
               <BackButton href="/transactions" label="Back to Transactions" className="text-text-secondary hover:text-text-primary" />
-              <h1 className="text-h1 text-text-primary mt-4">
+              <h1 className="text-2xl sm:text-h1 text-text-primary mt-4">
                 Transaction Details
               </h1>
-              <p className="text-text-secondary mt-2 text-body">View complete transaction information</p>
+              <p className="text-text-secondary mt-2 text-sm sm:text-body">View complete transaction information</p>
             </div>
           </header>
 
           {/* Dashboard Content */}
-          <div className="max-w-content mx-auto px-6 py-8">
-            <div className="bg-surface rounded-card shadow-soft p-8 border border-gray-100">
+          <div className="max-w-content-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            <div className="bg-surface rounded-card shadow-soft p-4 sm:p-6 lg:p-8 border border-gray-100">
               {/* Loading State */}
               {isLoading && (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+                <div className="text-center py-12" aria-live="polite" aria-busy="true">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" aria-hidden="true"></div>
                   <p className="text-text-secondary">Loading transaction...</p>
                 </div>
               )}
 
               {/* Error State */}
               {error && (
-                <div className="text-center py-12">
-                  <div className="rounded-md bg-red-50 p-4">
-                    <h3 className="text-h3 text-error mb-2">
-                      Error Loading Transaction
-                    </h3>
-                    <p className="text-small text-error">
-                      {error instanceof Error
-                        ? error.message
-                        : 'Failed to load transaction. Please try again.'}
-                    </p>
+                <div className="text-center py-12" role="alert" aria-live="assertive">
+                  <div className="rounded-md bg-red-50 border border-red-200 p-4 max-w-md mx-auto">
+                    <div className="flex items-start mb-3">
+                      <svg
+                        className="h-6 w-6 text-error mr-3 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <h3 className="text-h3 text-error mb-2">
+                          Error Loading Transaction
+                        </h3>
+                        <p className="text-small text-red-700 mb-4">
+                          {error instanceof Error
+                            ? error.message
+                            : 'Failed to load transaction. Please try again.'}
+                        </p>
+                        <Link
+                          href="/transactions"
+                          className="text-sm font-medium text-red-800 hover:text-red-900 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                          aria-label="Go back to transactions list"
+                        >
+                          ← Back to Transactions
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <Link
-                    href="/transactions"
-                    className="mt-4 inline-block text-accent hover:text-accent-dark"
-                  >
-                    ← Back to Transactions
-                  </Link>
                 </div>
               )}
 
               {/* Transaction Details */}
               {transaction && !isLoading && !error && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Status Badge */}
                   <div
-                    className={`rounded-lg border-2 p-6 ${getStatusColor(
+                    className={`rounded-lg border-2 p-4 sm:p-6 ${getStatusColor(
                       transaction.status,
                     )}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-bold mb-2">
+                    <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
+                      <div className="flex-1">
+                        <h2 className="text-xl sm:text-2xl font-bold mb-2">
                           {transaction.status}
                         </h2>
-                        <p className="text-lg">
+                        <p className="text-base sm:text-lg">
                           {getStatusMessage(transaction.status)}
                         </p>
-                        <p className="text-2xl font-semibold mt-2">
+                        <p className="text-xl sm:text-2xl font-semibold mt-2">
                           {formattedAmount}
                         </p>
                       </div>
-                      {getStatusIcon(transaction.status)}
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(transaction.status)}
+                      </div>
                     </div>
                   </div>
 
                   {/* Transaction Information */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-h3 text-text-primary mb-4">
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h3 className="text-lg sm:text-h3 text-text-primary mb-3 sm:mb-4">
                       Transaction Information
                     </h3>
-                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <dl className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                       <div>
                         <dt className="text-small font-medium text-text-secondary">
                           Transaction ID
                         </dt>
-                        <dd className="mt-1 text-small text-text-primary font-mono">
+                        <dd className="mt-1 text-small text-text-primary font-mono break-all">
                           {transaction.id}
                         </dd>
                       </div>
@@ -213,7 +236,7 @@ export default function TransactionDetailPage({
                         <dt className="text-small font-medium text-text-secondary">
                           External Reference
                         </dt>
-                        <dd className="mt-1 text-small text-text-primary font-mono">
+                        <dd className="mt-1 text-small text-text-primary font-mono break-all">
                           {transaction.externalReference}
                         </dd>
                       </div>
@@ -222,7 +245,7 @@ export default function TransactionDetailPage({
                           <dt className="text-small font-medium text-text-secondary">
                             Provider Transaction ID
                           </dt>
-                          <dd className="mt-1 text-small text-text-primary font-mono">
+                          <dd className="mt-1 text-small text-text-primary font-mono break-all">
                             {transaction.providerTransactionId}
                           </dd>
                         </div>
@@ -271,11 +294,11 @@ export default function TransactionDetailPage({
                   </div>
 
                   {/* Customer Information */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-h3 text-text-primary mb-4">
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h3 className="text-lg sm:text-h3 text-text-primary mb-3 sm:mb-4">
                       Customer Information
                     </h3>
-                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <dl className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                       <div>
                         <dt className="text-small font-medium text-text-secondary">
                           Name
@@ -307,11 +330,11 @@ export default function TransactionDetailPage({
 
                   {/* Payment Link Information */}
                   {transaction.paymentLink && (
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-h3 text-text-primary mb-4">
+                    <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                      <h3 className="text-lg sm:text-h3 text-text-primary mb-3 sm:mb-4">
                         Payment Link
                       </h3>
-                      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <dl className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                         <div>
                           <dt className="text-small font-medium text-text-secondary">
                             Title
@@ -324,7 +347,7 @@ export default function TransactionDetailPage({
                           <dt className="text-small font-medium text-text-secondary">
                             Slug
                           </dt>
-                          <dd className="mt-1 text-small text-text-primary font-mono">
+                          <dd className="mt-1 text-small text-text-primary font-mono break-all">
                             {transaction.paymentLink.slug}
                           </dd>
                         </div>
@@ -342,8 +365,8 @@ export default function TransactionDetailPage({
 
                   {/* Receipt Section */}
                   {transaction.status === TransactionStatus.SUCCESS && (
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-h3 text-text-primary mb-4">
+                    <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                      <h3 className="text-lg sm:text-h3 text-text-primary mb-3 sm:mb-4">
                         Receipt
                       </h3>
                       {isLoadingReceipt ? (
@@ -353,8 +376,8 @@ export default function TransactionDetailPage({
                         </div>
                       ) : receipt ? (
                         <div className="bg-success/10 border border-success/20 rounded-card p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex-1">
                               <p className="text-small font-medium text-success">
                                 Receipt Number: {receipt.receiptNumber}
                               </p>
@@ -375,7 +398,9 @@ export default function TransactionDetailPage({
                             <button
                               onClick={() => downloadReceipt.mutate(id)}
                               disabled={downloadReceipt.isPending}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-small font-medium rounded-button text-white bg-success hover:bg-success-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:opacity-50 disabled:cursor-not-allowed transition-fast shadow-soft"
+                              aria-label={downloadReceipt.isPending ? 'Downloading receipt, please wait' : 'Download receipt PDF'}
+                              aria-busy={downloadReceipt.isPending}
+                              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-small font-medium rounded-button text-white bg-success hover:bg-success-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success disabled:opacity-50 disabled:cursor-not-allowed transition-fast shadow-soft"
                             >
                               {downloadReceipt.isPending ? (
                                 <>
@@ -405,8 +430,8 @@ export default function TransactionDetailPage({
                         </div>
                       ) : (
                         <div className="bg-warning/10 border border-warning/20 rounded-card p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex-1">
                               <p className="text-small font-medium text-warning">
                                 Receipt not yet generated
                               </p>
@@ -417,7 +442,9 @@ export default function TransactionDetailPage({
                             <button
                               onClick={() => generateReceipt.mutate(id)}
                               disabled={generateReceipt.isPending}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-small font-medium rounded-button text-white bg-warning hover:bg-warning-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warning disabled:opacity-50 disabled:cursor-not-allowed transition-fast shadow-soft"
+                              aria-label={generateReceipt.isPending ? 'Generating receipt, please wait' : 'Generate receipt'}
+                              aria-busy={generateReceipt.isPending}
+                              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-small font-medium rounded-button text-white bg-warning hover:bg-warning-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warning disabled:opacity-50 disabled:cursor-not-allowed transition-fast shadow-soft"
                             >
                               {generateReceipt.isPending ? (
                                 <>
@@ -450,11 +477,11 @@ export default function TransactionDetailPage({
                   )}
 
                   {/* Timestamps */}
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-h3 text-text-primary mb-4">
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h3 className="text-lg sm:text-h3 text-text-primary mb-3 sm:mb-4">
                       Timestamps
                     </h3>
-                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <dl className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
                       <div>
                         <dt className="text-small font-medium text-text-secondary">
                           Created At

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { getProductImageUrl } from '@/utils/image-url';
 
 interface ProductCardProps {
   product: {
@@ -25,42 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
     maximumFractionDigits: 0,
   }).format(Number(product.price));
 
-  // Get image URL - handle both S3 URLs and local paths
-  // If S3 URL fails, fallback to proxy endpoint
-  const getImageUrl = () => {
-    if (!product.imageUrl) return null;
-    
-    // Extract key from S3 URL if it's an S3 URL
-    // Format: https://bucket.s3.region.amazonaws.com/products/userId/timestamp-random.ext
-    if (product.imageUrl.startsWith('https://') && product.imageUrl.includes('.s3.')) {
-      // Extract the key part (everything after .amazonaws.com/)
-      const keyMatch = product.imageUrl.match(/\.amazonaws\.com\/(.+)$/);
-      if (keyMatch && keyMatch[1]) {
-        // Use proxy endpoint as primary (more reliable)
-        const apiBaseUrl = typeof window !== 'undefined' 
-          ? (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-              ? 'http://localhost:3000/api'
-              : `${window.location.protocol}//${window.location.hostname}:3000/api`)
-          : '/api';
-        return `${apiBaseUrl}/products/image/${keyMatch[1]}`;
-      }
-      // Fallback to direct S3 URL if we can't extract key
-      return product.imageUrl;
-    }
-    
-    // If it's already a full URL (non-S3), return as is
-    if (product.imageUrl.startsWith('http://') || product.imageUrl.startsWith('https://')) {
-      return product.imageUrl;
-    }
-    
-    // If it's a local path, construct full URL
-    if (product.imageUrl.startsWith('/uploads/')) {
-      return `${typeof window !== 'undefined' ? window.location.origin : ''}${product.imageUrl}`;
-    }
-    return product.imageUrl;
-  };
-
-  const imageUrl = getImageUrl();
+  const imageUrl = getProductImageUrl(product.imageUrl);
 
   return (
     <Link
