@@ -47,16 +47,6 @@ services:
       - key: AWS_S3_BUCKET_NAME
         sync: false  # Set manually (optional)
 
-databases:
-  # PostgreSQL Database
-  - name: payment-link-db
-    databaseName: payment_link_db
-    user: payment_link_user
-    plan: free  # Change to 'starter' for production
-    region: oregon  # Change to your preferred region
-
-  # Redis Cache (defined as a separate Redis service)
-
   # Redis service
   - type: redis
     name: payment-link-redis
@@ -64,3 +54,10 @@ databases:
     region: oregon  # Change to your preferred region
     maxmemoryPolicy: allkeys-lru
 
+databases:
+  # PostgreSQL Database
+  - name: payment-link-db
+    databaseName: payment_link_db
+    user: payment_link_user
+    plan: free  # Change to 'starter' for production
+    region: oregon  # Change to your preferred region
