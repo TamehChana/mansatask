@@ -56,7 +56,7 @@ async function bootstrap() {
   const normalizedFrontendUrl = frontendUrl?.replace(/\/$/, '');
   
   // In development, allow all origins for easier debugging
-  // In production, only allow the configured frontend URL (with or without trailing slash)
+  // In production, allow the configured frontend URL and Vercel preview URLs
   if (nodeEnv === 'development') {
     app.enableCors({
       origin: true, // Allow all origins in development
@@ -69,7 +69,6 @@ async function bootstrap() {
     });
   } else {
     app.enableCors({
-      // Allow both with and without trailing slash
       origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
@@ -80,11 +79,16 @@ async function bootstrap() {
         const normalizedOrigin = origin.replace(/\/$/, '');
         const allowedOrigin = normalizedFrontendUrl?.replace(/\/$/, '') || '';
         
+        // Check if origin matches the production URL
         if (normalizedOrigin === allowedOrigin) {
+          callback(null, true);
+        } 
+        // Allow Vercel preview URLs (they use patterns like: project-name-*.vercel.app)
+        else if (normalizedOrigin.includes('.vercel.app') && normalizedOrigin.includes('mansatask')) {
           callback(null, true);
         } else {
           // Log for debugging (in production, this is expected for unauthorized origins)
-          logger.warn(`CORS: Origin ${origin} not allowed. Expected: ${allowedOrigin}`);
+          logger.warn(`CORS: Origin ${origin} not allowed. Expected: ${allowedOrigin} or Vercel preview URL`);
           callback(null, false);
         }
       },
