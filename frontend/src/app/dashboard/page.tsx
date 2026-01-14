@@ -2,6 +2,7 @@
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useDashboard } from '@/hooks/dashboard/useDashboard';
+import { useUserProfile } from '@/hooks/users/useUsers';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Navigation } from '@/components/dashboard/Navigation';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { TransactionStatus } from '@/types/payment';
 
 export default function DashboardPage() {
   const { stats, recentTransactions, isLoading } = useDashboard();
+  const { profile } = useUserProfile();
 
   const formattedRevenue = new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -108,6 +110,60 @@ export default function DashboardPage() {
 
           {/* Dashboard Content */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            {/* Phone Number Reminder */}
+            {profile && !profile.phone && (
+              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-amber-600 mt-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-amber-800">
+                          Add your phone number
+                        </h3>
+                        <p className="mt-1 text-sm text-amber-700">
+                          Your phone number will appear on receipts for your customers.
+                        </p>
+                      </div>
+                      <Link
+                        href="/profile"
+                        className="ml-4 flex-shrink-0 inline-flex items-center text-sm font-medium text-amber-800 hover:text-amber-900"
+                      >
+                        Add now
+                        <svg
+                          className="ml-1 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Loading State */}
             {isLoading && (
               <div className="text-center py-12">
