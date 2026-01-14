@@ -52,9 +52,11 @@ async function bootstrap() {
 
   // CORS configuration
   const frontendUrl = configService.get<string>('config.frontendUrl');
+  // Normalize frontend URL - remove trailing slash to match browser origin format
+  const normalizedFrontendUrl = frontendUrl?.replace(/\/$/, '');
   
   // In development, allow all origins for easier debugging
-  // In production, only allow the configured frontend URL
+  // In production, only allow the configured frontend URL (with or without trailing slash)
   if (nodeEnv === 'development') {
     app.enableCors({
       origin: true, // Allow all origins in development
@@ -67,7 +69,20 @@ async function bootstrap() {
     });
   } else {
     app.enableCors({
-      origin: frontendUrl,
+      // Allow both with and without trailing slash
+      origin: (origin, callback) => {
+        if (!origin) {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          return callback(null, true);
+        }
+        // Normalize origin by removing trailing slash
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        if (normalizedOrigin === normalizedFrontendUrl) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
