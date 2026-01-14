@@ -4,18 +4,32 @@
  */
 
 /**
- * Get the API base URL from environment
- * Uses the exact same pattern as api-client.ts for consistency
+ * Get the API base URL from environment or window location
+ * Uses the same pattern as api-client.ts but with better fallback handling
  */
 function getApiBaseUrl(): string {
-  // Match api-client.ts pattern exactly: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
-  // Note: NEXT_PUBLIC_API_URL should already include /api (e.g., https://backend.onrender.com/api)
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+  // In Next.js, NEXT_PUBLIC_* env vars are embedded at build time
+  // So if not set, it will be undefined, and we need a fallback
+  if (typeof window !== 'undefined') {
+    // Client-side: Check environment variable first
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
+    // Fallback: Use localhost for development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    // Production fallback: Construct from window location (assumes API is on same domain)
+    // Or use hardcoded backend URL if known
+    return '/api'; // Relative path fallback
+  }
+  // Server-side fallback
+  return process.env.NEXT_PUBLIC_API_URL || '/api';
 }
 
 /**
  * Get the correct image URL for displaying product images
- * @param imageUrl - The image URL from the database (could be S3 URL, local path, etc.)
+ * @param imageUrl - The image URL from the database (could be S3 URL, local path, storage key, etc.)
  * @returns The URL to use for the <img> src attribute
  */
 export function getProductImageUrl(imageUrl: string | null | undefined): string | null {
@@ -47,8 +61,12 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
       } catch (e) {
         // If decoding fails, use original key
       }
-      // Use API proxy endpoint
-      return `${apiBaseUrl}/products/image/${encodeURIComponent(key)}`;
+      // Use API proxy endpoint - ensure apiBaseUrl is not empty
+      if (apiBaseUrl) {
+        return `${apiBaseUrl}/products/image/${encodeURIComponent(key)}`;
+      }
+      // If apiBaseUrl is empty, fallback to direct S3 URL
+      return imageUrl;
     }
 
     // Fallback to direct S3 URL if we can't extract key
@@ -64,19 +82,35 @@ export function getProductImageUrl(imageUrl: string | null | undefined): string 
   // Remove /uploads/ prefix and use API proxy
   if (imageUrl.startsWith('/uploads/')) {
     const path = imageUrl.replace(/^\/uploads\//, '');
-    return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
+    if (apiBaseUrl) {
+      return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
+    }
+    // If apiBaseUrl is empty, return relative path (won't work but won't crash)
+    return `/api/products/image/${encodeURIComponent(path)}`;
   }
   
   if (imageUrl.startsWith('uploads/')) {
     const path = imageUrl.replace(/^uploads\//, '');
-    return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
+    if (apiBaseUrl) {
+      return `${apiBaseUrl}/products/image/${encodeURIComponent(path)}`;
+    }
+    return `/api/products/image/${encodeURIComponent(path)}`;
   }
 
   // If it looks like a storage key (starts with products/), use API proxy
   if (imageUrl.startsWith('products/')) {
-    return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
+    if (apiBaseUrl) {
+      return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
+    }
+    // Ensure we always return a valid URL
+    return `/api/products/image/${encodeURIComponent(imageUrl)}`;
   }
 
   // Default: assume it's a storage key and use API proxy
-  return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
+  // Ensure we always return a valid URL with API base
+  if (apiBaseUrl) {
+    return `${apiBaseUrl}/products/image/${encodeURIComponent(imageUrl)}`;
+  }
+  // Final fallback - use relative path
+  return `/api/products/image/${encodeURIComponent(imageUrl)}`;
 }
