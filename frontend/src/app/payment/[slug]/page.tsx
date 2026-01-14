@@ -4,8 +4,8 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePaymentLinkBySlug } from '@/hooks/payment-links/usePaymentLinks';
 import { useInitiatePayment } from '@/hooks/payments/usePayments';
-import type { PaymentProvider } from '@/types/payment';
-import { PaymentForm } from '@/components/payment/PaymentForm';
+import { PaymentProvider } from '@/types/payment';
+import { PaymentForm, type PaymentFormData } from '@/components/payment/PaymentForm';
 import { useToast } from '@/components/ui/ToastProvider';
 import { getUserFriendlyErrorMessage } from '@/utils/error-messages';
 
@@ -22,12 +22,7 @@ export default function PublicPaymentPage({
     useInitiatePayment();
   const { showToast } = useToast();
 
-  const handlePayment = async (data: {
-    customerName: string;
-    customerPhone: string;
-    customerEmail?: string;
-    paymentProvider: PaymentProvider;
-  }) => {
+  const handlePayment = async (data: PaymentFormData) => {
     if (!paymentLink) return;
 
     try {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { PaymentProvider } from '@/types/payment';
+import { PaymentProvider } from '@/types/payment';
 
 const paymentSchema = z.object({
   customerName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -16,12 +16,12 @@ const paymentSchema = z.object({
       'Phone number must be in Cameroon format (+237XXXXXXXXX or 0XXXXXXXXX)',
     ),
   customerEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
-  paymentProvider: z.enum(['MTN', 'VODAFONE', 'AIRTELTIGO'], {
+  paymentProvider: z.nativeEnum(PaymentProvider, {
     message: 'Please select a payment provider',
   }),
 });
 
-type PaymentFormData = z.infer<typeof paymentSchema>;
+export type PaymentFormData = z.infer<typeof paymentSchema>;
 
 interface PaymentFormProps {
   onSubmit: (data: PaymentFormData) => void | Promise<void>;
