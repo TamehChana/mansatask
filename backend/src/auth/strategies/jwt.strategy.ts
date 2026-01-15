@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface JwtPayload {
@@ -19,8 +20,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!secret) {
       throw new Error('JWT_SECRET is required');
     }
+
+    // Custom extractor: prefer Authorization header but also support HttpOnly cookies
+    const jwtFromRequest = ExtractJwt.fromExtractors([
+      ExtractJwt.fromAuthHeaderAsBearerToken(),
+      (req: Request): string | null => {
+        // Allow reading access token from cookies for more secure auth setups
+        // (cookies will only be present if cookie-based auth is enabled at the edge)
+        const anyReq = req as any;
+        const tokenFromCookie =
+          anyReq?.cookies?.accessToken ||
+          anyReq?.signedCookies?.accessToken ||
+          null;
+        return tokenFromCookie || null;
+      },
+    ]);
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest,
       ignoreExpiration: false,
       secretOrKey: secret,
     });

@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -38,6 +39,9 @@ async function bootstrap() {
       crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     }),
   );
+
+  // Security: Parse cookies so auth strategies can safely read HttpOnly tokens when enabled
+  app.use(cookieParser());
 
   // Security: Trust proxy (for rate limiting behind reverse proxy)
   app.set('trust proxy', 1);

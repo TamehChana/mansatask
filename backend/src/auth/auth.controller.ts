@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards, Res } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -9,6 +9,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -28,8 +29,15 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 400, description: 'Validation error or user already exists' })
   @ApiResponse({ status: 429, description: 'Too many requests - rate limit exceeded' })
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.register(registerDto);
+
+    // Optionally set HttpOnly cookies for tokens (keeps JSON response unchanged)
+    if (result.accessToken && result.refreshToken) {
+      this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    }
+
+    return result;
   }
 
   /**
@@ -45,8 +53,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @ApiResponse({ status: 429, description: 'Too many requests - rate limit exceeded' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.login(loginDto);
+
+    if (result.accessToken && result.refreshToken) {
+      this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    }
+
+    return result;
   }
 
   /**
@@ -58,8 +72,15 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard, ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async refreshToken(@CurrentUser() user: any) {
-    return this.authService.refreshToken(user.id, user.email);
+  async refreshToken(@CurrentUser() user: any, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.refreshToken(user.id, user.email);
+
+    if (result.accessToken) {
+      // Only access token is rotated here; refresh token stays the same by design
+      this.setAuthCookies(res, result.accessToken);
+    }
+
+    return result;
   }
 
   /**
@@ -85,6 +106,32 @@ export class AuthController {
       resetPasswordDto.token,
       resetPasswordDto.password,
     );
+  }
+
+  /**
+   * Helper to set secure auth cookies in a central place.
+   * This is backwards compatible with the existing JSON-based token handling.
+   */
+  private setAuthCookies(res: Response, accessToken: string, refreshToken?: string) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : ('lax' as 'lax'),
+      path: '/',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    if (refreshToken) {
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : ('lax' as 'lax'),
+        path: '/api/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+    }
   }
 }
 

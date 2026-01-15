@@ -1,5 +1,11 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
+// Flag: when true, we rely on httpOnly cookies for auth and avoid touching localStorage.
+// By default this is false so existing submitted behavior remains unchanged.
+const USE_COOKIE_AUTH =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_AUTH_USE_COOKIES === 'true';
+
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
@@ -7,14 +13,21 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Allow browser to send cookies when cookie-based auth is enabled
+  withCredentials: USE_COOKIE_AUTH,
 });
 
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // In cookie-auth mode, we let the browser send HttpOnly cookies; no Authorization header needed.
+    if (USE_COOKIE_AUTH) {
+      return config;
+    }
+
     // Get token from Zustand store (stored as JSON in localStorage under 'auth-storage')
     let token: string | null = null;
-    
+
     if (typeof window !== 'undefined') {
       try {
         // Try to get from Zustand storage first
@@ -23,7 +36,7 @@ apiClient.interceptors.request.use(
           const parsed = JSON.parse(authStorage);
           token = parsed?.state?.accessToken || null;
         }
-        
+
         // Fallback to direct localStorage (for backward compatibility)
         if (!token) {
           token = localStorage.getItem('accessToken');
@@ -58,7 +71,22 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh token - get from Zustand storage
+        // Cookie-auth mode: rely on backend refresh endpoint using HttpOnly cookie only.
+        if (USE_COOKIE_AUTH) {
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
+            {},
+            {
+              withCredentials: true,
+            },
+          );
+
+          // In cookie mode, we don't manage tokens on the client; just retry the request.
+          originalRequest._retry = true;
+          return apiClient(originalRequest);
+        }
+
+        // Token-based mode: Try to refresh token - get from Zustand storage
         let refreshToken: string | null = null;
         
         if (typeof window !== 'undefined') {
