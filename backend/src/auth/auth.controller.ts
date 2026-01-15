@@ -9,7 +9,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Response } from 'express';
+import type { Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
