@@ -128,13 +128,16 @@ cp .env.example .env
 
 **Note**: Copy the `.env.example` file to `.env` and replace the placeholder values with your actual credentials. The `.env.example` file contains the template with all required environment variables.
 
-**For interviewers/assessors:** The environment variable credentials will be sent to you via email. The email will include the actual credential values for:
-- Mansa Transfers API credentials (API key and secret)
-- SendGrid API key and verified sender email
-- JWT secrets and webhook secret
-- AWS credentials (optional, if S3 storage is needed)
+**For interviewers/assessors:** 
 
-Please check your email for the credentials document.
+For security best practices, sensitive credentials should not be shared via email. Please note:
+
+- **JWT Secrets & Webhook Secret**: These can be generated locally using any random string (e.g., `openssl rand -base64 32`)
+- **Database & Redis**: Configured automatically via Docker Compose
+- **Mansa Transfers API**: Test credentials can be obtained from Mansa Transfers, or will be provided through a secure channel upon request
+- **AWS S3 & SendGrid**: **Test credentials for AWS S3 and SendGrid email are already included in the `backend/.env.example` file** for local testing purposes. Simply copy `backend/.env.example` to `backend/.env` and use the provided test credentials. These are assessment-only credentials and not production credentials.
+
+All credential requirements and setup instructions are documented in the `.env.example` files. If you need test credentials for any other service, please request them and they will be provided through a secure method.
 
 Required variables to configure:
 
@@ -473,6 +476,8 @@ Note: API documentation is only available in development and staging environment
 
 ### Backend Environment Variables
 
+**Note:** The `backend/.env.example` file contains test credentials for AWS S3 and SendGrid email services for local testing. Simply copy `backend/.env.example` to `backend/.env` to use these credentials.
+
 Required:
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection string
@@ -480,8 +485,8 @@ Required:
 - `JWT_REFRESH_SECRET` - Secret key for JWT refresh tokens
 - `MANSA_API_KEY` - Mansa Transfers API key
 - `MANSA_API_SECRET` - Mansa Transfers API secret
-- `EMAIL_USER` - SendGrid sender email
-- `EMAIL_PASS` - SendGrid API key
+- `EMAIL_USER` - SendGrid sender email (test credentials in `.env.example`)
+- `EMAIL_PASS` - SendGrid API key (test credentials in `.env.example`)
 - `FRONTEND_URL` - Frontend application URL
 - `WEBHOOK_SECRET` - Secret for webhook signature verification
 
@@ -490,11 +495,11 @@ Optional:
 - `PORT` - Server port (default: 3000)
 - `JWT_EXPIRATION` - Access token expiration (default: 15m)
 - `JWT_REFRESH_EXPIRATION` - Refresh token expiration (default: 7d)
-- `AWS_ACCESS_KEY_ID` - AWS access key for S3
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key for S3
-- `AWS_S3_BUCKET_NAME` - S3 bucket name
-- `AWS_S3_REGION` - S3 region (default: us-east-1)
-- `EMAIL_FROM` - Email sender address (defaults to EMAIL_USER)
+- `AWS_ACCESS_KEY_ID` - AWS access key for S3 (test credentials in `.env.example`)
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key for S3 (test credentials in `.env.example`)
+- `AWS_S3_BUCKET_NAME` - S3 bucket name (test credentials in `.env.example`)
+- `AWS_S3_REGION` - S3 region (default: us-east-1, test credentials in `.env.example`)
+- `EMAIL_FROM` - Email sender address (defaults to EMAIL_USER, test credentials in `.env.example`)
 
 ### Frontend Environment Variables
 
