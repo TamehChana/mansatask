@@ -307,7 +307,17 @@ The following assumptions were made during the development of this platform:
 
 2. **Single Currency**: The platform only supports CFA (West African CFA Franc). Multi-currency support would require significant changes to the data model and business logic.
 
-3. **Email Delivery**: While SendGrid is used for email delivery, emails sent from Gmail addresses through SendGrid may experience minor delays due to Gmail's DMARC policy. This is expected behavior and emails are still delivered successfully.
+3. **Email Delivery Times**: Email delivery times vary significantly between email providers:
+   - **iOS Mail (Apple Mail)**: Emails are typically delivered instantly (within seconds)
+   - **Gmail**: Emails may take several minutes to hours to arrive
+   
+   This difference occurs because:
+   - Gmail uses aggressive spam filtering and scans emails more thoroughly (especially those with attachments like PDF receipts)
+   - Gmail maintains sender reputation scores and may delay emails from new or low-volume senders
+   - Transaction-related emails undergo additional security verification to prevent fraud
+   - iOS Mail relies on the mail server's filtering, which is typically less strict
+   
+   **Note**: This is normal behavior and not a bug. All emails are successfully delivered, but Gmail users may experience delays. To improve Gmail delivery times, consider verifying your domain in SendGrid (SPF, DKIM, DMARC records) and building sender reputation over time.
 
 4. **Testing Coverage**: While the application has test suites, coverage could be expanded to include more edge cases and integration scenarios.
 

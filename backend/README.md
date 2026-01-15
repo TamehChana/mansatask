@@ -456,6 +456,43 @@ Swagger/OpenAPI documentation is available at `/api/docs` when running in develo
 - Check email templates exist in `src/email/templates/`
 - Ensure `EMAIL_FROM` address is verified in SendGrid
 
+#### Email Delivery Times: Gmail vs iOS Mail
+
+**Important Note**: Email delivery times vary significantly between email providers:
+
+- **iOS Mail (Apple Mail)**: Emails are typically delivered **instantly** (within seconds)
+- **Gmail**: Emails may take **several minutes to hours** to arrive
+
+**Why the difference?**
+
+1. **Gmail's Aggressive Spam Filtering**:
+   - Gmail uses sophisticated machine learning algorithms to scan every email for spam, phishing, and malware
+   - Emails with attachments (like PDF receipts) undergo additional security scanning
+   - Transaction-related emails are subject to extra verification to prevent fraud
+
+2. **Sender Reputation System**:
+   - Gmail maintains a detailed reputation score for every sender
+   - New or low-volume SendGrid accounts may have lower reputation scores
+   - Gmail delays emails from unknown or low-reputation senders for additional verification
+
+3. **Content Analysis**:
+   - Gmail scans email content, links, and attachments more thoroughly than iOS Mail
+   - Payment-related keywords and transaction references can trigger additional security checks
+   - PDF attachments are scanned for malicious content
+
+4. **Infrastructure Differences**:
+   - iOS Mail relies on the mail server's filtering (less strict)
+   - Gmail processes billions of emails daily and has more complex routing and filtering systems
+
+**What this means for users**:
+- Emails sent from the platform are successfully delivered to both Gmail and iOS Mail
+- Gmail users may experience delays (typically 5-30 minutes, sometimes up to a few hours)
+- This is normal behavior and not a bug in the system
+- To improve Gmail delivery times, consider:
+  - Verifying your domain in SendGrid (SPF, DKIM, DMARC records)
+  - Building sender reputation by sending consistent, legitimate emails
+  - Ensuring recipients add your sender email to their contacts
+
 ## 📄 License
 
 This project is private and proprietary.
