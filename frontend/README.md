@@ -335,10 +335,23 @@ npm run test:coverage
 
 - `NEXT_PUBLIC_API_URL` - Backend API URL (e.g., `http://localhost:3000/api`)
 
+### Optional Variables
+
+- `NEXT_PUBLIC_AUTH_USE_COOKIES` - Enable cookie-based authentication for enhanced security (set to `'true'` to enable)
+  - When enabled, uses HttpOnly cookies instead of localStorage for token storage
+  - Provides better XSS protection
+  - Default: disabled (uses localStorage for backwards compatibility)
+
 ### Environment-Specific Configuration
 
 - **Development**: `http://localhost:3000/api`
 - **Production**: `https://payment-link-backend.onrender.com/api`
+
+**Example `.env.local` for enhanced security:**
+```env
+NEXT_PUBLIC_API_URL=https://payment-link-backend.onrender.com/api
+NEXT_PUBLIC_AUTH_USE_COOKIES=true
+```
 
 Note: Next.js requires the `NEXT_PUBLIC_` prefix for environment variables that should be exposed to the browser. These variables are embedded at build time.
 
@@ -365,7 +378,12 @@ The application implements several performance optimizations:
 
 ## Security Considerations
 
-- JWT tokens stored securely in Zustand with persistence
+- **Authentication Options**:
+  - **Default Mode**: JWT tokens stored in Zustand with localStorage persistence (backwards compatible)
+  - **Enhanced Security Mode**: Optional cookie-based authentication using HttpOnly cookies (XSS protection)
+    - Enable by setting `NEXT_PUBLIC_AUTH_USE_COOKIES=true` in environment variables
+    - When enabled, tokens are never stored in localStorage and are managed via secure cookies
+    - Backend automatically sets HttpOnly cookies on login/register/refresh
 - Automatic token refresh on expiration
 - Protected routes with authentication guards
 - Input validation on all forms
@@ -422,8 +440,13 @@ The build output will be in the `.next` directory, ready for deployment.
 
 ### Authentication Issues
 
-- Clear browser localStorage and refresh
-- Verify JWT tokens are being stored correctly
+- **Token-based auth (default)**:
+  - Clear browser localStorage and refresh
+  - Verify JWT tokens are being stored correctly in Zustand/localStorage
+- **Cookie-based auth (if enabled)**:
+  - Clear browser cookies and refresh
+  - Verify `NEXT_PUBLIC_AUTH_USE_COOKIES=true` is set
+  - Ensure backend is setting cookies correctly
 - Check backend authentication endpoints
 
 ### Image Display Issues

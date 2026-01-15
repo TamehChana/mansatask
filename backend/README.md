@@ -341,6 +341,9 @@ npm run start:prod
 
 - **Input Validation**: All inputs are validated using class-validator DTOs
 - **Authentication**: JWT-based authentication with secure token handling
+  - **Dual Token Support**: Supports both Authorization header (Bearer tokens) and HttpOnly cookies
+  - **Cookie-Based Auth**: Optional secure cookie-based authentication to prevent XSS token theft
+  - **Backwards Compatible**: Existing header-based authentication continues to work
 - **Password Security**: bcrypt hashing with salt rounds
 - **Rate Limiting**: Protects against brute force and DDoS attacks
 - **CORS**: Configured for secure cross-origin requests
@@ -372,6 +375,39 @@ npm run start:prod
 - `EMAIL_FROM` - Custom "from" email address
 
 See `.env.example` for complete configuration options.
+
+## 🍪 Cookie-Based Authentication (Enhanced Security)
+
+The backend supports **optional cookie-based JWT authentication** for enhanced security. This feature provides protection against XSS attacks by storing tokens in HttpOnly cookies that cannot be accessed by JavaScript.
+
+### How It Works
+
+- **Backwards Compatible**: The backend accepts tokens via both:
+  - `Authorization: Bearer <token>` header (existing method, still works)
+  - HttpOnly cookies named `accessToken` and `refreshToken` (new secure method)
+
+- **Automatic Cookie Setting**: When users register, login, or refresh tokens, the backend automatically sets secure HttpOnly cookies in addition to returning JSON responses.
+
+- **Cookie Configuration**:
+  - `httpOnly: true` - Prevents JavaScript access (XSS protection)
+  - `secure: true` - Only sent over HTTPS in production
+  - `sameSite: 'strict'` - CSRF protection in production
+  - Appropriate expiration times matching token lifetimes
+
+### Enabling Cookie-Based Auth on Frontend
+
+To use cookie-based authentication on the frontend, set the following environment variable:
+
+```env
+NEXT_PUBLIC_AUTH_USE_COOKIES=true
+```
+
+When enabled, the frontend will:
+- Stop storing tokens in localStorage
+- Rely on HttpOnly cookies for authentication
+- Automatically send cookies with all requests (via `withCredentials: true`)
+
+**Note**: Cookie-based auth is **opt-in**. By default, the system uses the existing header-based authentication (localStorage + Authorization header) to maintain backwards compatibility.
 
 ## 🚀 Deployment
 

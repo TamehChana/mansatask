@@ -509,7 +509,12 @@ Required:
 ## Security Considerations
 
 - All passwords are hashed using bcrypt with salt rounds of 10
-- JWT tokens are used for authentication with short-lived access tokens and long-lived refresh tokens
+- JWT tokens are used for authentication with short-lived access tokens (15 minutes) and long-lived refresh tokens (7 days)
+- **Enhanced Authentication**: Optional cookie-based JWT authentication available for XSS protection
+  - Backend supports both Authorization header and HttpOnly cookie authentication
+  - Cookies are automatically set on login/register/refresh endpoints
+  - Frontend can opt-in to cookie-based auth via `NEXT_PUBLIC_AUTH_USE_COOKIES=true`
+  - Backwards compatible - existing header-based auth continues to work
 - All API endpoints are protected with authentication guards except public endpoints
 - User data access is restricted through authorization checks (IDOR prevention)
 - Rate limiting is enabled on all endpoints
