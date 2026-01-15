@@ -29,11 +29,7 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background flex flex-col lg:flex-row">
-        {/* Sidebar Navigation */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <Navigation />
-        </aside>
-        {/* Mobile Navigation */}
+        {/* Navigation - handles both mobile and desktop */}
         <Navigation />
 
         {/* Main Content */}
